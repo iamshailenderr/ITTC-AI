@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITTC-AI — Security Operations Center</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- TOP NAV / HEADER -->
+    <header class="soc-topbar">
+        <div class="brand">
+            <div class="brand-shield">🛡️</div>
+            <div>
+                <h1>ITTC-AI <span class="brand-badge">SOC PLATFORM</span></h1>
+                <p class="brand-sub">Autonomous Threat Intelligence &bull; FAISS RAG &bull; Qwen3 Copilot</p>
+            </div>
+        </div>
+
+        <div class="topbar-actions">
+            <div id="backendStatus" class="status-pill status-online">
+                <span class="status-dot"></span>
+                <span id="statusText">Backend Online (Port 8000)</span>
+            </div>
+
+            <button id="btnCorrelate" class="btn btn-secondary" onclick="triggerCorrelation()">
+                <span class="btn-icon">⚡</span> Run Correlation
+            </button>
+            <button id="btnRefresh" class="btn btn-primary" onclick="refreshAll()">
+                <span class="btn-icon">🔄</span> Refresh
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="soc-container">
+
+        <!-- 1. KPI SECTION -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Total Alerts</div>
+                <div class="kpi-value" id="kpiTotalAlerts">--</div>
+                <div class="kpi-sub" id="kpiAlertSources">Wazuh &amp; Suricata</div>
+            </div>
+
+            <div class="kpi-card kpi-critical">
+                <div class="kpi-label">Critical Severity</div>
+                <div class="kpi-value" id="kpiCriticalAlerts">--</div>
+                <div class="kpi-sub">Immediate action required</div>
+            </div>
+
+            <div class="kpi-card kpi-high">
+                <div class="kpi-label">High Severity</div>
+                <div class="kpi-value" id="kpiHighAlerts">--</div>
+                <div class="kpi-sub">Priority investigations</div>
+            </div>
+
+            <div class="kpi-card kpi-incidents">
+                <div class="kpi-label">Active Incidents</div>
+                <div class="kpi-value" id="kpiActiveIncidents">--</div>
+                <div class="kpi-sub" id="kpiIncidentBreakdown">Open / Investigating</div>
+            </div>
+
+            <div class="kpi-card kpi-anomaly">
+                <div class="kpi-label">Anomalies Flagged</div>
+                <div class="kpi-value" id="kpiAnomalies">--</div>
+                <div class="kpi-sub">Isolation Forest ML</div>
+            </div>
+
+            <div class="kpi-card kpi-risk">
+                <div class="kpi-label">Average Risk Score</div>
+                <div class="kpi-value" id="kpiAvgRisk">--</div>
+                <div class="kpi-sub">Composite severity scale</div>
+            </div>
+        </section>
+
+        <!-- 2. NAVIGATION TABS -->
+        <nav class="soc-tabs">
+            <button class="tab-btn active" onclick="switchTab('incidentsTab')">
+                <span class="tab-icon">🚨</span> Incidents &amp; Investigation
+            </button>
+            <button class="tab-btn" onclick="switchTab('alertsTab')">
+                <span class="tab-icon">📋</span> Security Alerts Queue
+            </button>
+            <button class="tab-btn" onclick="switchTab('iocTab')">
+                <span class="tab-icon">🔍</span> IOC Threat Hunter
+            </button>
+            <button class="tab-btn" onclick="switchTab('copilotTab')">
+                <span class="tab-icon">🤖</span> AI SOC Copilot
+            </button>
+            <button class="tab-btn" onclick="switchTab('metricsTab')">
+                <span class="tab-icon">📊</span> Security Metrics
+            </button>
+        </nav>
+
+        <!-- TAB 1: INCIDENTS & INVESTIGATION WORKSPACE -->
+        <section id="incidentsTab" class="tab-content active">
+            <div class="workspace-split">
+
+                <!-- Left Column: Incidents List -->
+                <div class="workspace-col incidents-col">
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <h2>Correlated Incidents</h2>
+                                <span class="badge badge-count" id="incidentCountBadge">0</span>
+                            </div>
+                            <div class="filter-controls">
+                                <select id="filterIncidentStatus" onchange="filterIncidents()" class="select-input">
+                                    <option value="ALL">All Statuses</option>
+                                    <option value="OPEN">Open</option>
+                                    <option value="INVESTIGATING">Investigating</option>
+                                    <option value="CONTAINED">Contained</option>
+                                    <option value="RESOLVED">Resolved</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="incidentsList" class="incident-feed">
+                            <div class="state-loading">
+                                <span class="spinner"></span> Loading correlated incidents...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Incident Dossier Detail -->
+                <div class="workspace-col dossier-col">
+                    <div id="incidentDetailPanel" class="panel-card dossier-panel">
+                        <div class="empty-dossier">
+                            <div class="empty-icon">📂</div>
+                            <h3>No Incident Selected</h3>
+                            <p>Select a correlated incident from the queue on the left to inspect timeline, explainable risk, anomaly detection, IOCs, and response recommendations.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB 2: ALERTS WORKSPACE -->
+        <section id="alertsTab" class="tab-content">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <h2>Normalized Security Alerts</h2>
+                        <span class="badge badge-count" id="alertsCountBadge">0</span>
+                    </div>
+
+                    <div class="filter-controls">
+                        <input type="text" id="searchAlerts" placeholder="Search host, IP, event..." oninput="filterAlerts()" class="text-input">
+                        <select id="filterAlertSeverity" onchange="filterAlerts()" class="select-input">
+                            <option value="ALL">All Severities</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                        <select id="filterAlertSource" onchange="filterAlerts()" class="select-input">
+                            <option value="ALL">All Sources</option>
+                            <option value="wazuh">Wazuh</option>
+                            <option value="suricata">Suricata</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="soc-table">
+                        <thead>
+                            <tr>
+                                <th>Alert ID</th>
+                                <th>Timestamp</th>
+                                <th>Source</th>
+                                <th>Severity</th>
+                                <th>Host / User</th>
+                                <th>Event Type &amp; Summary</th>
+                                <th>Source IP &rarr; Dest IP</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alertsTableBody">
+                            <tr>
+                                <td colspan="8" class="state-loading">
+                                    <span class="spinner"></span> Loading security alerts...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: IOC THREAT HUNTER -->
+        <section id="iocTab" class="tab-content">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div>
+                        <h2>IOC Investigation &amp; Threat Intelligence</h2>
+                        <p class="panel-desc">Query any IP, domain, URL, or hash across Threat Intelligence, alerts, and correlated incidents.</p>
+                    </div>
+                    <span class="badge badge-info">SYNTHETIC TI LABELED</span>
+                </div>
+
+                <!-- Search Input Bar -->
+                <div class="ioc-search-bar">
+                    <select id="iocTypeInput" class="select-input select-lg">
+                        <option value="ip">IP Address</option>
+                        <option value="domain">Domain Name</option>
+                        <option value="url">URL</option>
+                        <option value="md5">MD5 Hash</option>
+                        <option value="sha256">SHA256 Hash</option>
+                    </select>
+
+                    <input type="text" id="iocValueInput" placeholder="Enter IOC (e.g. 203.0.113.50 or c2-example.test)" class="text-input text-lg" onkeypress="if(event.key==='Enter') runIOCSearch()">
+
+                    <button class="btn btn-primary btn-lg" onclick="runIOCSearch()">
+                        <span class="btn-icon">🔎</span> Investigate IOC
+                    </button>
+                </div>
+
+                <!-- Quick Samples -->
+                <div class="quick-samples">
+                    <span class="quick-label">Sample IOCs:</span>
+                    <button class="chip-btn chip-danger" onclick="setAndSearchIOC('ip', '203.0.113.50')">203.0.113.50 (C2 / Malicious IP)</button>
+                    <button class="chip-btn chip-danger" onclick="setAndSearchIOC('domain', 'c2-example.test')">c2-example.test (C2 Domain)</button>
+                    <button class="chip-btn chip-danger" onclick="setAndSearchIOC('ip', '203.0.113.100')">203.0.113.100 (Exfil IP)</button>
+                    <button class="chip-btn chip-warning" onclick="setAndSearchIOC('domain', 'sus-domain.example')">sus-domain.example (Suspicious)</button>
+                    <button class="chip-btn chip-neutral" onclick="setAndSearchIOC('ip', '192.0.2.1')">192.0.2.1 (Unknown Clean)</button>
+                </div>
+
+                <!-- IOC Results Area -->
+                <div id="iocResultsArea" class="ioc-results-area">
+                    <div class="empty-state">
+                        <div class="empty-icon">🔍</div>
+                        <p>Enter an IOC above or click one of the quick samples to begin investigation.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: AI SOC COPILOT -->
+        <section id="copilotTab" class="tab-content">
+            <div class="panel-card copilot-container">
+                <div class="panel-header copilot-header">
+                    <div>
+                        <h2>AI SOC Copilot</h2>
+                        <p class="panel-desc">Conversational security assistant grounded in your cybersecurity knowledge base (FAISS) &amp; local Qwen3.</p>
+                    </div>
+
+                    <div class="copilot-context-badge" id="copilotActiveContext">
+                        <span class="dot-context"></span>
+                        <span id="copilotContextLabel">Context: General Knowledge Base</span>
+                    </div>
+                </div>
+
+                <!-- Suggested Questions Chips -->
+                <div class="copilot-quick-prompts">
+                    <span class="quick-label">Quick Prompts:</span>
+                    <button class="chip-btn" onclick="sendQuickPrompt('Why is this incident high risk?')">Why is this incident high risk?</button>
+                    <button class="chip-btn" onclick="sendQuickPrompt('What should I investigate first?')">What should I investigate first?</button>
+                    <button class="chip-btn" onclick="sendQuickPrompt('What MITRE techniques are involved?')">What MITRE techniques are involved?</button>
+                    <button class="chip-btn" onclick="sendQuickPrompt('What evidence supports this classification?')">What evidence supports this?</button>
+                    <button class="chip-btn" onclick="sendQuickPrompt('What response recommendation should I consider?')">What response to consider?</button>
+                </div>
+
+                <!-- Chat History Feed -->
+                <div id="copilotChatFeed" class="copilot-feed">
+                    <div class="chat-message chat-system">
+                        <div class="chat-avatar">🤖</div>
+                        <div class="chat-body">
+                            <div class="chat-sender">ITTC-AI Copilot <span class="chat-tag">RAG-Grounded &bull; Qwen3</span></div>
+                            <div class="chat-text">
+                                Hello Analyst. I am your defensive SOC Copilot. I analyze security telemetry using your local FAISS knowledge base and local Qwen3 model. Ask me about any incident, MITRE ATT&amp;CK techniques, anomaly patterns, or containment guidance.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="copilot-input-bar">
+                    <textarea id="copilotQuestionInput" rows="2" placeholder="Ask the Copilot a question (e.g. 'How do I detect PowerShell credential dumping?' or 'Analyze the active incident')..." class="textarea-input" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendCopilotMessage();}"></textarea>
+                    <button id="btnSendCopilot" class="btn btn-primary btn-chat" onclick="sendCopilotMessage()">
+                        <span>Send</span> <span class="btn-icon">&rarr;</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: SECURITY METRICS & POSTURE -->
+        <section id="metricsTab" class="tab-content">
+            <div class="metrics-grid">
+
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>Severity Distribution</h3>
+                    </div>
+                    <div id="metricSeverityBars" class="metric-chart-box">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>Incident Status Lifecycle</h3>
+                    </div>
+                    <div id="metricStatusBars" class="metric-chart-box">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>Top Observed MITRE Techniques</h3>
+                    </div>
+                    <div id="metricMitreTags" class="metric-chart-box">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>Telemetry Sources &amp; Coverage</h3>
+                    </div>
+                    <div class="metric-chart-box">
+                        <div class="posture-summary">
+                            <div class="posture-item">
+                                <span class="posture-label">Host Detection (HIDS)</span>
+                                <strong class="posture-val">Wazuh Active</strong>
+                            </div>
+                            <div class="posture-item">
+                                <span class="posture-label">Network Detection (NIDS)</span>
+                                <strong class="posture-val">Suricata Active</strong>
+                            </div>
+                            <div class="posture-item">
+                                <span class="posture-label">Vector Knowledge Base</span>
+                                <strong class="posture-val">FAISS 295 Chunks</strong>
+                            </div>
+                            <div class="posture-item">
+                                <span class="posture-label">Anomaly Detector</span>
+                                <strong class="posture-val">Isolation Forest ML</strong>
+                            </div>
+                            <div class="posture-item">
+                                <span class="posture-label">Local LLM Engine</span>
+                                <strong class="posture-val">Qwen3 via Ollama</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- REPORT MODAL -->
+    <div id="reportModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-icon">📄</span>
+                    <h3 id="modalReportTitle">Incident Report</h3>
+                </div>
+                <button class="modal-close-btn" onclick="closeReportModal()">&times;</button>
+            </div>
+
+            <div class="modal-toolbar">
+                <button class="btn btn-sm btn-secondary" onclick="copyReportJSON()">
+                    📋 Copy JSON
+                </button>
+                <button class="btn btn-sm btn-primary" onclick="downloadReportJSON()">
+                    💾 Download JSON File
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <pre id="modalReportJSON" class="code-block"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALERT ANALYSIS MODAL -->
+    <div id="alertAnalysisModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-icon">⚡</span>
+                    <h3 id="modalAlertAnalysisTitle">Alert Deep AI Analysis</h3>
+                </div>
+                <button class="modal-close-btn" onclick="closeAlertAnalysisModal()">&times;</button>
+            </div>
+            <div id="modalAlertAnalysisBody" class="modal-body">
+                <!-- Injected dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
