@@ -4,13 +4,23 @@ Exposes REST endpoints for the AI pipeline, incident management,
 IOC investigation, SOC Copilot, and dashboard.
 """
 
-from typing import Any, Dict, List
-from fastapi import FastAPI, HTTPException
+from typing import Any, Dict, List, Optional
+from fastapi import FastAPI, HTTPException, Security, Depends, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import APIKeyHeader
 
+from config import settings
 from backend.models.alert import SecurityAlert
 from backend.models.analysis import AIAnalysis
+from backend.models.response import (
+    ResponseRecord,
+    ResponseProposalRequest,
+    ResponseApprovalRequest,
+    ResponseRejectionRequest,
+    AuditLogEntry,
+    ResponseAction,
+)
 from backend.models.incident import (
     Incident,
     IncidentStatusUpdate,
@@ -28,10 +38,38 @@ from backend.services.incidents import (
     add_incident_note,
 )
 from backend.services.ioc_investigator import investigate_ioc, IOCInvestigation
+from backend.services.active_response import (
+    propose_response,
+    approve_response,
+    reject_response,
+    rollback_response,
+    list_responses,
+    get_response,
+    get_audit_trail,
+)
 from backend.ai.copilot import copilot_chat
 from backend.services.reporting import generate_incident_report
 
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+def verify_api_key(api_key: Optional[str] = Security(api_key_header)) -> bool:
+    """
+    Enforce API key authentication on sensitive response endpoints when configured.
+    If settings.API_KEY is unset/empty, runs in permissive local dev mode.
+    """
+    configured_key = getattr(settings, "API_KEY", None)
+    if configured_key:
+        if not api_key or api_key != configured_key:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Unauthorized: Missing or invalid X-API-Key header",
+            )
+    return True
+
+
 app = FastAPI(title="ITTC AI Security Intelligence API")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -80,9 +118,25 @@ def run_analysis(alert_id: str) -> AIAnalysis:
     if alert is None:
         raise HTTPException(status_code=404, detail=f"Alert '{alert_id}' not found")
     try:
-        return analyze_alert(alert)
+        analysis = analyze_alert(alert)
+        if analysis.response_recommendation:
+            rec = analysis.response_recommendation
+            try:
+                action_name = rec.action.upper()
+                if action_name in ResponseAction.__members__:
+                    propose_response(ResponseProposalRequest(
+                        action=ResponseAction[action_name],
+                        target=rec.target,
+                        alert_id=alert_id,
+                        reason=rec.reason,
+                        confidence=rec.confidence,
+                    ))
+            except Exception:
+                pass  # Proposing should never break the analysis response
+        return analysis
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 # ==========================================
@@ -168,6 +222,8 @@ def get_ioc_investigation(ioc_type: str, ioc_value: str) -> IOCInvestigation:
 # ==========================================
 # AI SOC Copilot Endpoint
 # ==========================================
+# AI SOC Copilot Endpoint
+# ==========================================
 
 @app.post("/api/copilot/chat", response_model=CopilotResponse)
 def copilot_chat_endpoint(request: CopilotRequest) -> CopilotResponse:
@@ -176,6 +232,86 @@ def copilot_chat_endpoint(request: CopilotRequest) -> CopilotResponse:
     Accepts question, optional incident_id, alert_id, and history.
     """
     return copilot_chat(request)
+
+
+# ==========================================
+# Active Response Endpoints
+# ==========================================
+
+@app.get("/api/responses", response_model=List[ResponseRecord])
+def get_all_responses(
+    state: Optional[str] = None,
+    alert_id: Optional[str] = None,
+) -> List[ResponseRecord]:
+    """List all Active Response records with optional state or alert_id filtering."""
+    return list_responses(state=state, alert_id=alert_id)
+
+
+@app.get("/api/responses/{response_id}", response_model=ResponseRecord)
+def read_response_record(response_id: str) -> ResponseRecord:
+    """Get a specific Active Response record by ID."""
+    record = get_response(response_id)
+    if not record:
+        raise HTTPException(status_code=404, detail=f"Response record '{response_id}' not found")
+    return record
+
+
+@app.post("/api/responses/propose", response_model=ResponseRecord, dependencies=[Depends(verify_api_key)])
+def propose_active_response(req: ResponseProposalRequest) -> ResponseRecord:
+    """Propose an Active Response action with safeguard validation and duplicate protection."""
+    try:
+        record, is_duplicate = propose_response(req)
+        return record
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/responses/{response_id}/approve", response_model=ResponseRecord, dependencies=[Depends(verify_api_key)])
+def approve_active_response(
+    response_id: str,
+    req: ResponseApprovalRequest,
+) -> ResponseRecord:
+    """Approve and trigger an Active Response action (simulated dry-run by default)."""
+    try:
+        return approve_response(response_id, req)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Response record '{response_id}' not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/responses/{response_id}/reject", response_model=ResponseRecord, dependencies=[Depends(verify_api_key)])
+def reject_active_response(
+    response_id: str,
+    req: ResponseRejectionRequest,
+) -> ResponseRecord:
+    """Reject a proposed response with analyst justification."""
+    try:
+        return reject_response(response_id, req)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Response record '{response_id}' not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/responses/{response_id}/rollback", response_model=ResponseRecord, dependencies=[Depends(verify_api_key)])
+def rollback_active_response(
+    response_id: str,
+    actor: str = "soc_analyst",
+) -> ResponseRecord:
+    """Roll back an executed action (e.g. UNBLOCK_IP for BLOCK_IP)."""
+    try:
+        return rollback_response(response_id, actor=actor)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Response record '{response_id}' not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/responses/audit/log", response_model=List[AuditLogEntry])
+def get_audit_trail_endpoint(limit: int = 100) -> List[AuditLogEntry]:
+    """Retrieve immutable audit log entries, newest first."""
+    return get_audit_trail(limit=limit)
 
 
 # ==========================================
