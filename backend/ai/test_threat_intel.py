@@ -1,4 +1,4 @@
-"""
+﻿"""
 Stretch 3 - Threat Intelligence Enrichment Test
 backend/ai/test_threat_intel.py
 
@@ -71,7 +71,7 @@ def _pass_fail(condition, label):
 # Test stages
 # ---------------------------------------------------------------------------
 
-def test_ioc_extraction():
+def stage_ioc_extraction():
     print("\nExtracted IOCs:")
     iocs = extract_iocs(SYNTHETIC_ALERT)
     for ioc in iocs:
@@ -91,7 +91,7 @@ def test_ioc_extraction():
     return ok, iocs
 
 
-def test_ti_enrichment(iocs):
+def stage_ti_enrichment(iocs):
     provider    = MockThreatIntelProvider()
     enrichments = enrich_iocs(iocs, provider=provider)
 
@@ -122,14 +122,14 @@ def test_ti_enrichment(iocs):
     return ok, enrichments
 
 
-def test_rag(alert):
+def stage_rag(alert):
     chunks = retrieve_context(alert, top_k=3)
     ok     = len(chunks) >= 1
     print(f"\n  [OK] Retrieved {len(chunks)} RAG chunk(s)")
     return ok
 
 
-def test_ai_analysis(alert):
+def stage_ai_analysis(alert):
     print("\n  Calling local Ollama / Qwen3 4b ...")
     try:
         result = analyze_alert(alert)
@@ -148,10 +148,10 @@ if __name__ == "__main__":
 
     print(f"\nSynthetic Alert:\n{SYNTHETIC_ALERT.event}")
 
-    ioc_ok,  iocs        = test_ioc_extraction()
-    ti_ok,   enrichments = test_ti_enrichment(iocs)
-    rag_ok               = test_rag(SYNTHETIC_ALERT)
-    ai_ok,   result      = test_ai_analysis(SYNTHETIC_ALERT)
+    ioc_ok,  iocs        = stage_ioc_extraction()
+    ti_ok,   enrichments = stage_ti_enrichment(iocs)
+    rag_ok               = stage_rag(SYNTHETIC_ALERT)
+    ai_ok,   result      = stage_ai_analysis(SYNTHETIC_ALERT)
 
     _banner("RESULTS")
 
@@ -177,3 +177,4 @@ if __name__ == "__main__":
             print(f"\n  IOC Enrichment records attached to AIAnalysis: {len(result.ioc_enrichment)}")
             for rec in result.ioc_enrichment:
                 print(f"    [{rec['type'].upper()}] {rec['value']} -> {rec['reputation']}")
+
