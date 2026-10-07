@@ -123,7 +123,10 @@ def correlate_alerts(
     Groups correlated alerts into incidents using union-find style clustering.
     """
     if alerts is None:
-        alerts = get_alerts()
+        try:
+            alerts = get_alerts()
+        except Exception:
+            alerts = []
 
     if not alerts:
         return []

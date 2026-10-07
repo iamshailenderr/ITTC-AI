@@ -4,11 +4,13 @@ Exposes REST endpoints for the AI pipeline, incident management,
 IOC investigation, SOC Copilot, and dashboard.
 """
 
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException, Security, Depends, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
+from starlette.staticfiles import StaticFiles
 
 from config import settings
 from backend.models.alert import SecurityAlert
@@ -29,6 +31,11 @@ from backend.models.incident import (
     CopilotResponse,
 )
 from backend.services.alerts import get_alerts, get_alert
+from backend.sources.wazuh_indexer import (
+    check_wazuh_indexer_status,
+    WazuhIndexerConnectionError,
+    WazuhIndexerAuthError,
+)
 from backend.ai.analyzer import analyze_alert
 from backend.services.incidents import (
     list_incidents,
@@ -46,6 +53,7 @@ from backend.services.active_response import (
     list_responses,
     get_response,
     get_audit_trail,
+    check_wazuh_manager_status,
 )
 from backend.ai.copilot import copilot_chat
 from backend.services.reporting import generate_incident_report
@@ -84,7 +92,7 @@ app.add_middleware(
 
 
 # ==========================================
-# Health
+# Health & Status
 # ==========================================
 
 @app.get("/health")
@@ -92,20 +100,57 @@ def health_check() -> dict:
     return {"status": "ok", "service": "ittc-ai"}
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    from fastapi import Response
+    return Response(status_code=204)
+
+
+@app.get("/api/status/wazuh")
+@app.get("/api/wazuh/status")
+def get_wazuh_status() -> dict:
+    """Return diagnostic status of Wazuh Indexer and Wazuh Manager connections without exposing credentials."""
+    return {
+        "alert_source": settings.ALERT_SOURCE,
+        "indexer": check_wazuh_indexer_status(),
+        "manager": check_wazuh_manager_status(),
+    }
+
+
 # ==========================================
 # Alert Endpoints (Preserved)
 # ==========================================
 
 @app.get("/api/alerts", response_model=List[SecurityAlert])
-def list_alerts() -> List[SecurityAlert]:
-    """Return all normalized security alerts."""
-    return get_alerts()
+def list_alerts(fallback: bool = False) -> List[SecurityAlert]:
+    """Return all normalized security alerts with graceful error handling."""
+    try:
+        return get_alerts()
+    except (WazuhIndexerConnectionError, WazuhIndexerAuthError) as e:
+        if fallback:
+            from backend.sources.mock import get_mock_alerts
+            return get_mock_alerts()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Wazuh Indexer unavailable: {str(e)}",
+        )
 
 
 @app.get("/api/alerts/{alert_id}", response_model=SecurityAlert)
-def read_alert(alert_id: str) -> SecurityAlert:
+def read_alert(alert_id: str, fallback: bool = False) -> SecurityAlert:
     """Return a single alert by ID."""
-    alert = get_alert(alert_id)
+    try:
+        alert = get_alert(alert_id)
+    except (WazuhIndexerConnectionError, WazuhIndexerAuthError) as e:
+        if fallback:
+            from backend.sources.mock import get_mock_alerts
+            for a in get_mock_alerts():
+                if a.alert_id == alert_id:
+                    return a
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Wazuh Indexer unavailable: {str(e)}",
+        )
     if alert is None:
         raise HTTPException(status_code=404, detail=f"Alert '{alert_id}' not found")
     return alert
@@ -151,7 +196,10 @@ def get_all_incidents() -> List[Incident]:
     """
     incidents = list_incidents()
     if not incidents:
-        incidents = correlate_alerts()
+        try:
+            incidents = correlate_alerts()
+        except (WazuhIndexerConnectionError, WazuhIndexerAuthError):
+            incidents = []
     return incidents
 
 
@@ -167,7 +215,13 @@ def read_incident(incident_id: str) -> Incident:
 @app.post("/api/incidents/correlate", response_model=List[Incident])
 def trigger_correlation() -> List[Incident]:
     """Trigger alert correlation and return resulting incidents."""
-    return correlate_alerts()
+    try:
+        return correlate_alerts()
+    except (WazuhIndexerConnectionError, WazuhIndexerAuthError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Wazuh Indexer unavailable: {str(e)}",
+        )
 
 
 @app.patch("/api/incidents/{incident_id}/status", response_model=Incident)
@@ -310,7 +364,7 @@ def rollback_active_response(
 
 @app.get("/api/responses/audit/log", response_model=List[AuditLogEntry])
 def get_audit_trail_endpoint(limit: int = 100) -> List[AuditLogEntry]:
-    """Retrieve immutable audit log entries, newest first."""
+    """Retrieve append-only Active Response audit log entries, newest first."""
     return get_audit_trail(limit=limit)
 
 
@@ -334,3 +388,13 @@ async def generic_exception_handler(request, exc: Exception) -> JSONResponse:
         status_code=500,
         content={"detail": "Internal server error"},
     )
+
+
+# ==========================================
+# Static Files — Serve Primary SOC UI
+# ==========================================
+
+_FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+if _FRONTEND_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(_FRONTEND_DIR), html=True), name="frontend")
+

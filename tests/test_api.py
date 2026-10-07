@@ -158,6 +158,56 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertIn("sources", data)
         self.assertGreater(len(data["sources"]), 0)
 
+    def test_wazuh_status_endpoint(self):
+        res = self.client.get("/api/status/wazuh")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertIn("alert_source", data)
+        self.assertIn("indexer", data)
+        self.assertIn("manager", data)
+        self.assertIn("reachable", data["indexer"])
+        self.assertIn("reachable", data["manager"])
+
+    def test_static_frontend_serving(self):
+        res = self.client.get("/")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("ITTC-AI", res.text)
+        self.assertIn("SOC PLATFORM", res.text)
+
+    def test_active_response_api_flow(self):
+        # 1. Propose
+        prop_payload = {
+            "action": "BLOCK_IP",
+            "target": "198.51.100.99",
+            "alert_id": "ITTC-001",
+            "reason": "Test malicious IP activity",
+            "confidence": 0.95
+        }
+        res_prop = self.client.post("/api/responses/propose", json=prop_payload)
+        self.assertEqual(res_prop.status_code, 200)
+        prop_data = res_prop.json()
+        resp_id = prop_data["response_id"]
+        self.assertEqual(prop_data["state"], "PENDING_APPROVAL")
+
+        # 2. Approve
+        app_payload = {
+            "approver": "test_analyst",
+            "reason": "Confirmed threat"
+        }
+        res_app = self.client.post(f"/api/responses/{resp_id}/approve", json=app_payload)
+        self.assertEqual(res_app.status_code, 200)
+        app_data = res_app.json()
+        self.assertIn(app_data["state"], ("SIMULATED", "COMPLETED"))
+
+        # 3. Audit trail
+        res_audit = self.client.get("/api/responses/audit/log")
+        self.assertEqual(res_audit.status_code, 200)
+        audit_data = res_audit.json()
+        self.assertIsInstance(audit_data, list)
+        self.assertGreater(len(audit_data), 0)
+        events = [a["event"] for a in audit_data]
+        self.assertIn("RESPONSE_APPROVED", events)
+
 
 if __name__ == "__main__":
     unittest.main()

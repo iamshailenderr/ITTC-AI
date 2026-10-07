@@ -246,3 +246,51 @@ def get_wazuh_alert(alert_id: str) -> SecurityAlert | None:
         if alert.alert_id == alert_id:
             return alert
     return None
+
+
+def check_wazuh_indexer_status() -> dict[str, Any]:
+    """
+    Check Wazuh Indexer connectivity safely without exposing credentials.
+    Returns status dictionary with connection diagnostics.
+    """
+    base_url = settings.WAZUH_INDEXER_URL.rstrip("/")
+    result: dict[str, Any] = {
+        "url": base_url,
+        "index": settings.WAZUH_INDEXER_INDEX,
+        "verify_tls": settings.WAZUH_INDEXER_VERIFY_TLS,
+        "reachable": False,
+        "authenticated": False,
+        "credentials_configured": bool(
+            settings.WAZUH_INDEXER_USERNAME and settings.WAZUH_INDEXER_PASSWORD
+        ),
+        "error": None,
+    }
+
+    try:
+        auth = (
+            (settings.WAZUH_INDEXER_USERNAME, settings.WAZUH_INDEXER_PASSWORD)
+            if result["credentials_configured"]
+            else None
+        )
+        resp = requests.get(
+            f"{base_url}/",
+            auth=auth,
+            timeout=3,
+            verify=settings.WAZUH_INDEXER_VERIFY_TLS,
+        )
+        result["reachable"] = True
+        if resp.status_code == 200:
+            result["authenticated"] = True
+        elif resp.status_code in (401, 403):
+            result["error"] = f"Authentication rejected (HTTP {resp.status_code})"
+        else:
+            result["error"] = f"Unexpected status (HTTP {resp.status_code})"
+    except requests.exceptions.SSLError as e:
+        result["error"] = "TLS verification failed. Set WAZUH_INDEXER_VERIFY_TLS=false if self-signed."
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+        result["error"] = f"Connection timed out or host unreachable at {base_url}."
+    except Exception as e:
+        result["error"] = f"Check failed: {str(e)}"
+
+    return result
+

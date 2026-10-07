@@ -10,6 +10,10 @@ let allAlerts = [];
 let allIncidents = [];
 let filteredAlerts = [];
 let filteredIncidents = [];
+let allResponses = [];
+let filteredResponses = [];
+let allAuditEntries = [];
+let wazuhStatus = { indexer: {}, manager: {} };
 let selectedIncidentId = null;
 let selectedAlertId = null;
 let copilotHistory = [];
@@ -25,13 +29,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function initDashboard() {
     await checkBackendHealth();
+    await checkWazuhStatus();
     await refreshAll();
 }
 
 async function refreshAll() {
     showGlobalLoading(true);
     try {
-        await Promise.all([loadAlerts(), loadIncidents()]);
+        await Promise.all([
+            loadAlerts(),
+            loadIncidents(),
+            loadActiveResponses(),
+            loadAuditTrail(),
+            checkWazuhStatus()
+        ]);
         updateKPIs();
         renderMetrics();
 
@@ -66,6 +77,56 @@ async function checkBackendHealth() {
     }
 }
 
+async function checkWazuhStatus() {
+    const idxEl = document.getElementById("indexerStatus");
+    const idxText = document.getElementById("indexerStatusText");
+    const mgrEl = document.getElementById("managerStatus");
+    const mgrText = document.getElementById("managerStatusText");
+    const arModeBadge = document.getElementById("arModeBadge");
+
+    try {
+        const res = await fetch(`${API_BASE}/api/status/wazuh`, { signal: AbortSignal.timeout(4000) });
+        if (res.ok) {
+            wazuhStatus = await res.json();
+            const idx = wazuhStatus.indexer || {};
+            const mgr = wazuhStatus.manager || {};
+
+            if (idxText && idxEl) {
+                if (idx.authenticated || idx.reachable) {
+                    idxEl.className = "status-pill status-online";
+                    idxText.textContent = "Indexer Online";
+                    idxEl.title = `Wazuh Indexer active at ${idx.url}`;
+                } else {
+                    idxEl.className = "status-pill status-offline";
+                    idxText.textContent = "Indexer Offline";
+                    idxEl.title = idx.error || "Wazuh Indexer unreachable";
+                }
+            }
+
+            if (mgrText && mgrEl) {
+                if (mgr.authenticated || mgr.reachable) {
+                    mgrEl.className = "status-pill status-online";
+                    mgrText.textContent = "Manager Online";
+                    mgrEl.title = `Wazuh Manager active at ${mgr.url}`;
+                } else {
+                    mgrEl.className = "status-pill status-offline";
+                    mgrText.textContent = "Manager Offline";
+                    mgrEl.title = mgr.error || "Wazuh Manager unreachable";
+                }
+            }
+
+            if (arModeBadge) {
+                const isLive = mgr.mode === "live_wazuh" && mgr.enabled;
+                arModeBadge.className = isLive ? "badge badge-completed" : "badge badge-simulated";
+                arModeBadge.textContent = isLive ? "MODE: LIVE WAZUH ACTIVE" : "MODE: SIMULATED (DRY-RUN)";
+            }
+        }
+    } catch (err) {
+        if (idxText) idxText.textContent = "Indexer: Offline";
+        if (mgrText) mgrText.textContent = "Manager: Offline";
+    }
+}
+
 function showGlobalLoading(isLoading) {
     const btn = document.getElementById("btnRefresh");
     if (btn) {
@@ -78,18 +139,33 @@ function showGlobalLoading(isLoading) {
 // 2. DATA LOADING & KPI CALCULATION
 // ==========================================================================
 
-async function loadAlerts() {
+async function loadAlerts(fallback = false) {
     try {
-        const res = await fetch(`${API_BASE}/api/alerts`);
+        const url = `${API_BASE}/api/alerts${fallback ? "?fallback=true" : ""}`;
+        const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         allAlerts = await res.json();
         filteredAlerts = [...allAlerts];
         renderAlertsTable();
+        updateKPIs();
     } catch (err) {
         console.error("Error loading alerts:", err);
-        document.getElementById("alertsTableBody").innerHTML = `
-            <tr><td colspan="8" class="empty-state">Unable to load alerts from backend (${escapeHtml(err.message)})</td></tr>
-        `;
+        const tbody = document.getElementById("alertsTableBody");
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr><td colspan="8" class="empty-state" style="padding: 24px; text-align: center;">
+                    <div style="font-size: 14px; font-weight: 600; color: #f59e0b; margin-bottom: 6px;">
+                        ⚠️ Wazuh Indexer is currently offline (${escapeHtml(err.message)})
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+                        The configured Wazuh Indexer host (10.20.26.150:9200) is unreachable. Load sample security alerts to test and explore the complete dashboard features.
+                    </div>
+                    <button class="btn btn-sm btn-primary" onclick="loadAlerts(true)" style="cursor: pointer; padding: 6px 14px;">
+                        📂 Load Sample Security Alerts
+                    </button>
+                </td></tr>
+            `;
+        }
     }
 }
 
@@ -158,6 +234,9 @@ function switchTab(tabId) {
 
     if (tabId === "metricsTab") {
         renderMetrics();
+    } else if (tabId === "responseTab") {
+        loadActiveResponses();
+        loadAuditTrail();
     }
 }
 
@@ -273,33 +352,105 @@ function renderIncidentDossier(incident) {
         `).join("")
         : `<p style="color: var(--text-muted); font-size: 13px;">No timeline entries recorded.</p>`;
 
-    // Build Response Recommendation
+    // Build Active Response Controls & Recommendation
+    const relatedIds = incident.related_alert_ids || [];
+    let matchedResp = allResponses.find(r => relatedIds.includes(r.alert_id) || r.alert_id === incident.incident_id);
     const rec = incident.response_recommendation;
-    const recHtml = rec ? `
-        <div class="recommendation-box">
-            <div class="rec-head">
-                <div class="rec-title-group">
-                    <span class="rec-action-badge">${escapeHtml(rec.action)}</span>
-                    <strong style="color: #ffffff; font-size: 14px;">Target: ${escapeHtml(rec.target)}</strong>
+
+    let recHtml = "";
+    if (matchedResp) {
+        const exec = matchedResp.execution_result || {};
+        const isPending = ["PENDING_APPROVAL", "PROPOSED"].includes(matchedResp.state.toUpperCase());
+        const isReversible = matchedResp.rollback_supported && ["SIMULATED", "COMPLETED"].includes(matchedResp.state.toUpperCase());
+
+        let execDetails = "";
+        if (exec.output_message || exec.command_dispatched) {
+            execDetails = `
+                <div class="response-exec-result">
+                    <div><strong>Execution Output:</strong> ${escapeHtml(exec.output_message || 'Action executed.')}</div>
+                    ${exec.command_dispatched ? `<div><strong>Command Dispatched:</strong> <code>${escapeHtml(exec.command_dispatched)}</code></div>` : ''}
+                    <div><strong>Latency:</strong> ${exec.execution_time_ms ?? 0} ms &bull; <strong>Mode:</strong> ${escapeHtml((matchedResp.mode || exec.mode || 'simulated').toUpperCase())}</div>
                 </div>
-                <span class="rec-disclaimer-pill">RECOMMENDATION ONLY &bull; REQUIRES ANALYST APPROVAL</span>
+            `;
+        }
+
+        let actionButtons = "";
+        if (isPending) {
+            actionButtons = `
+                <div class="response-actions-row">
+                    <button class="btn btn-sm btn-approve" onclick="approveResponseAction('${escapeHtml(matchedResp.response_id)}')">
+                        ✅ Approve &amp; Execute Action
+                    </button>
+                    <button class="btn btn-sm btn-reject" onclick="rejectResponseAction('${escapeHtml(matchedResp.response_id)}')">
+                        ❌ Reject Proposal
+                    </button>
+                </div>
+            `;
+        } else if (isReversible) {
+            actionButtons = `
+                <div class="response-actions-row">
+                    <button class="btn btn-sm btn-rollback" onclick="rollbackResponseAction('${escapeHtml(matchedResp.response_id)}')">
+                        ↩️ Rollback Containment Action
+                    </button>
+                </div>
+            `;
+        }
+
+        recHtml = `
+            <div class="recommendation-box">
+                <div class="rec-head">
+                    <div class="rec-title-group">
+                        <span class="rec-action-badge">${escapeHtml(matchedResp.action)}</span>
+                        <strong style="color: #ffffff; font-size: 14px;">Target: ${escapeHtml(matchedResp.target)}</strong>
+                    </div>
+                    <div>
+                        ${getResponseStateBadgeHtml(matchedResp.state)}
+                    </div>
+                </div>
+                <div class="rec-body">${escapeHtml(matchedResp.reason || 'Containment action proposed.')}</div>
+                <div class="rec-meta">
+                    <span class="safeguard-badge-passed">🛡️ Safeguards Validated</span>
+                    <span>Confidence: ${(Number(matchedResp.confidence || 0.8) * 100).toFixed(0)}%</span>
+                    <span>Response ID: <code>${escapeHtml(matchedResp.response_id)}</code></span>
+                </div>
+                ${execDetails}
+                ${actionButtons}
             </div>
-            <div class="rec-body">${escapeHtml(rec.reason)}</div>
-            <div class="rec-meta">
-                <span>Confidence: ${(Number(rec.confidence) * 100).toFixed(0)}%</span>
-                <span>Requires Approval: ${rec.requires_approval ? "Yes" : "No"}</span>
-                <span>Active Response Execution: Disabled (Advisor Mode)</span>
+        `;
+    } else if (rec) {
+        recHtml = `
+            <div class="recommendation-box">
+                <div class="rec-head">
+                    <div class="rec-title-group">
+                        <span class="rec-action-badge">${escapeHtml(rec.action)}</span>
+                        <strong style="color: #ffffff; font-size: 14px;">Target: ${escapeHtml(rec.target)}</strong>
+                    </div>
+                    <span class="rec-disclaimer-pill">RECOMMENDATION ONLY &bull; REQUIRES APPROVAL</span>
+                </div>
+                <div class="rec-body">${escapeHtml(rec.reason)}</div>
+                <div class="rec-meta">
+                    <span class="safeguard-badge-passed">🛡️ Target Safeguards Active</span>
+                    <span>Confidence: ${(Number(rec.confidence) * 100).toFixed(0)}%</span>
+                    <span>Approval Required: ${rec.requires_approval ? "Yes" : "No"}</span>
+                </div>
+                <div class="rec-interactive-controls">
+                    <button class="btn btn-sm btn-primary" onclick="proposeResponseForIncident('${escapeHtml(incident.incident_id)}')">
+                        ⚡ Propose &amp; Stage Active Response
+                    </button>
+                </div>
             </div>
-        </div>
-    ` : `
-        <div class="recommendation-box" style="border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
-            <div class="rec-head">
-                <span class="rec-action-badge" style="background:#475569;">INVESTIGATE_ONLY</span>
-                <span class="rec-disclaimer-pill">RECOMMENDATION ONLY</span>
+        `;
+    } else {
+        recHtml = `
+            <div class="recommendation-box" style="border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                <div class="rec-head">
+                    <span class="rec-action-badge" style="background:#475569;">INVESTIGATE_ONLY</span>
+                    <span class="rec-disclaimer-pill">TRIAGE MODE</span>
+                </div>
+                <div class="rec-body">Perform host-level forensic analysis and triage alert telemetry.</div>
             </div>
-            <div class="rec-body">Perform host-level forensic analysis and triage alert telemetry.</div>
-        </div>
-    `;
+        `;
+    }
 
     // Build Explainable Risk Factors ("Why this risk?")
     const factors = incident.risk_factors || [];
@@ -721,21 +872,61 @@ function renderAlertAnalysisBody(data) {
             <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">${escapeHtml(data.hypothesis)}</p>
         </div>
 
-        ${rec ? `
-        <div class="recommendation-box" style="margin: 16px 0;">
-            <div class="rec-head">
-                <div class="rec-title-group">
-                    <span class="rec-action-badge">${escapeHtml(rec.action)}</span>
-                    <strong style="color: #ffffff;">Target: ${escapeHtml(rec.target)}</strong>
+        ${rec ? (() => {
+            const existingResp = allResponses.find(r => r.alert_id === selectedAlertId);
+            let actionHtml = "";
+            let stateBadge = `<span class="rec-disclaimer-pill">APPROVAL-GATED &bull; SAFEGUARDS ACTIVE</span>`;
+            if (existingResp) {
+                stateBadge = getResponseStateBadgeHtml(existingResp.state);
+                const isPending = ["PENDING_APPROVAL", "PROPOSED"].includes((existingResp.state || "").toUpperCase());
+                if (isPending) {
+                    actionHtml = `
+                        <div class="response-actions-row" style="margin-top: 10px;">
+                            <button class="btn btn-sm btn-approve" onclick="approveResponseAction('${escapeHtml(existingResp.response_id)}')">
+                                ✅ Approve &amp; Execute Action
+                            </button>
+                            <button class="btn btn-sm btn-reject" onclick="rejectResponseAction('${escapeHtml(existingResp.response_id)}')">
+                                ❌ Reject Proposal
+                            </button>
+                        </div>
+                    `;
+                } else if (existingResp.rollback_supported && ["SIMULATED", "COMPLETED"].includes((existingResp.state || "").toUpperCase())) {
+                    actionHtml = `
+                        <div class="response-actions-row" style="margin-top: 10px;">
+                            <button class="btn btn-sm btn-rollback" onclick="rollbackResponseAction('${escapeHtml(existingResp.response_id)}')">
+                                ↩️ Rollback Containment Action
+                            </button>
+                        </div>
+                    `;
+                }
+            } else {
+                actionHtml = `
+                    <div class="response-actions-row" style="margin-top: 10px;">
+                        <button class="btn btn-sm btn-primary" onclick="stageAlertResponse('${escapeHtml(selectedAlertId)}', '${escapeHtml(rec.action)}', '${escapeHtml(rec.target)}', '${escapeHtml(rec.reason)}')">
+                            ⚡ Stage Response in Approval Queue
+                        </button>
+                    </div>
+                `;
+            }
+
+            return `
+            <div class="recommendation-box" style="margin: 16px 0;">
+                <div class="rec-head">
+                    <div class="rec-title-group">
+                        <span class="rec-action-badge">${escapeHtml(rec.action)}</span>
+                        <strong style="color: #ffffff;">Target: ${escapeHtml(rec.target)}</strong>
+                    </div>
+                    <div>${stateBadge}</div>
                 </div>
-                <span class="rec-disclaimer-pill">RECOMMENDATION ONLY</span>
-            </div>
-            <div class="rec-body">${escapeHtml(rec.reason)}</div>
-            <div class="rec-meta">
-                <span>Confidence: ${(Number(rec.confidence) * 100).toFixed(0)}%</span>
-                <span>Requires Approval: ${rec.requires_approval ? "Yes" : "No"}</span>
-            </div>
-        </div>` : ''}
+                <div class="rec-body">${escapeHtml(rec.reason)}</div>
+                <div class="rec-meta">
+                    <span class="safeguard-badge-passed">🛡️ Safeguards Enforced</span>
+                    <span>Confidence: ${(Number(rec.confidence) * 100).toFixed(0)}%</span>
+                    <span>Approval Required: ${rec.requires_approval ? "Yes" : "No"}</span>
+                </div>
+                ${actionHtml}
+            </div>`;
+        })() : ''}
 
         <div class="section-block">
             <h4 style="font-size: 13px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Explainable Risk Factors</h4>
@@ -1024,9 +1215,31 @@ function closeReportModal() {
 
 function copyReportJSON() {
     if (!activeReportData) return;
-    navigator.clipboard.writeText(JSON.stringify(activeReportData, null, 2))
-        .then(() => alert("Report JSON copied to clipboard."))
-        .catch(() => alert("Could not copy to clipboard."));
+    const text = JSON.stringify(activeReportData, null, 2);
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text)
+            .then(() => alert("Report JSON copied to clipboard."))
+            .catch(() => fallbackCopy(text));
+    } else {
+        fallbackCopy(text);
+    }
+}
+
+function fallbackCopy(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        document.execCommand("copy");
+        alert("Report JSON copied to clipboard.");
+    } catch {
+        alert("Could not copy to clipboard. Please copy manually from the viewer.");
+    }
+    document.body.removeChild(textArea);
 }
 
 function downloadReportJSON() {
@@ -1190,4 +1403,301 @@ function formatMarkdown(text) {
     // Paragraph breaks
     safe = safe.replace(/\n\n/g, '<br><br>');
     return safe;
+}
+
+// ==========================================================================
+// 12. ACTIVE RESPONSE & AUDIT TRAIL ENGINE
+// ==========================================================================
+
+function getResponseStateBadgeHtml(state) {
+    const s = String(state || "").toUpperCase();
+    if (s === "PENDING_APPROVAL" || s === "PROPOSED") return `<span class="badge badge-pending">PENDING APPROVAL</span>`;
+    if (s === "SIMULATED") return `<span class="badge badge-simulated">SIMULATED (DRY RUN)</span>`;
+    if (s === "COMPLETED") return `<span class="badge badge-completed">COMPLETED (LIVE)</span>`;
+    if (s === "REJECTED") return `<span class="badge badge-rejected">REJECTED</span>`;
+    if (s === "FAILED") return `<span class="badge badge-failed">FAILED</span>`;
+    if (s === "ROLLED_BACK") return `<span class="badge badge-rollback">ROLLED BACK</span>`;
+    return `<span class="badge badge-info">${escapeHtml(s)}</span>`;
+}
+
+async function loadActiveResponses() {
+    const queueList = document.getElementById("responseQueueList");
+    const countBadge = document.getElementById("responseQueueCountBadge");
+    try {
+        const res = await fetch(`${API_BASE}/api/responses`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        allResponses = await res.json();
+        filteredResponses = [...allResponses];
+        if (countBadge) countBadge.textContent = allResponses.length;
+        renderResponseQueue();
+    } catch (err) {
+        if (queueList) {
+            queueList.innerHTML = `<div class="empty-state"><p>Unable to load response queue: ${escapeHtml(err.message)}</p></div>`;
+        }
+    }
+}
+
+function filterResponses() {
+    const select = document.getElementById("filterResponseState");
+    const state = select ? select.value : "ALL";
+    if (state === "ALL") {
+        filteredResponses = [...allResponses];
+    } else {
+        filteredResponses = allResponses.filter(r => (r.state || "").toUpperCase() === state.toUpperCase());
+    }
+    renderResponseQueue();
+}
+
+function renderResponseQueue() {
+    const queueList = document.getElementById("responseQueueList");
+    if (!queueList) return;
+
+    if (!filteredResponses.length) {
+        queueList.innerHTML = `<div class="empty-state"><p>No Active Response records found matching criteria.</p></div>`;
+        return;
+    }
+
+    queueList.innerHTML = filteredResponses.map(r => {
+        const exec = r.execution_result || {};
+        const isReversible = r.rollback_supported && ["SIMULATED", "COMPLETED"].includes((r.state || "").toUpperCase());
+
+        let execBox = "";
+        if (exec.output_message || exec.command_dispatched) {
+            execBox = `
+                <div class="response-exec-result">
+                    <div><strong>Output:</strong> ${escapeHtml(exec.output_message || "Action executed.")}</div>
+                    ${exec.command_dispatched ? `<div><strong>Command Dispatched:</strong> <code>${escapeHtml(exec.command_dispatched)}</code></div>` : ""}
+                    <div><strong>Execution Time:</strong> ${exec.execution_time_ms ?? 0} ms &bull; <strong>Mode:</strong> ${escapeHtml((r.mode || exec.mode || "simulated").toUpperCase())}</div>
+                </div>
+            `;
+        }
+
+        let actionButtons = "";
+        if (["PENDING_APPROVAL", "PROPOSED"].includes((r.state || "").toUpperCase())) {
+            actionButtons = `
+                <button class="btn btn-sm btn-approve" onclick="approveResponseAction('${escapeHtml(r.response_id)}')">
+                    ✅ Approve Action
+                </button>
+                <button class="btn btn-sm btn-reject" onclick="rejectResponseAction('${escapeHtml(r.response_id)}')">
+                    ❌ Reject Proposal
+                </button>
+            `;
+        } else if (isReversible) {
+            actionButtons = `
+                <button class="btn btn-sm btn-rollback" onclick="rollbackResponseAction('${escapeHtml(r.response_id)}')">
+                    ↩️ Rollback Action
+                </button>
+            `;
+        }
+
+        return `
+            <div class="response-card">
+                <div class="response-card-head">
+                    <div>
+                        <div class="response-card-title">
+                            <span>${escapeHtml(r.action)}</span>
+                            <span style="color:var(--text-muted);">&rarr;</span>
+                            <code style="color:#ffffff;">${escapeHtml(r.target)}</code>
+                        </div>
+                        <div class="response-card-meta">
+                            Response ID: <code>${escapeHtml(r.response_id)}</code> &bull; Alert: <code>${escapeHtml(r.alert_id || 'N/A')}</code> &bull; Created: ${formatTimestamp(r.created_at)}
+                        </div>
+                    </div>
+                    <div>
+                        ${getResponseStateBadgeHtml(r.state)}
+                    </div>
+                </div>
+                <div class="response-card-reason">
+                    <strong>Reason:</strong> ${escapeHtml(r.reason || "No rationale specified")}
+                    ${r.approved_by ? `<br><small style="color:var(--text-muted);">Approved by: <b>${escapeHtml(r.approved_by)}</b> (${formatTimestamp(r.approved_at)})</small>` : ""}
+                    ${r.rejected_by ? `<br><small style="color:#f87171;">Rejected by: <b>${escapeHtml(r.rejected_by)}</b>: ${escapeHtml(r.rejection_reason || "")}</small>` : ""}
+                </div>
+                ${execBox}
+                ${actionButtons ? `<div class="response-actions-row">${actionButtons}</div>` : ""}
+            </div>
+        `;
+    }).join("");
+}
+
+async function loadAuditTrail() {
+    const tbody = document.getElementById("auditTrailTableBody");
+    const countBadge = document.getElementById("auditTrailCountBadge");
+    try {
+        const res = await fetch(`${API_BASE}/api/responses/audit/log?limit=100`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        allAuditEntries = await res.json();
+        if (countBadge) countBadge.textContent = allAuditEntries.length;
+
+        if (!allAuditEntries.length) {
+            tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No Active Response audit records recorded yet.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = allAuditEntries.map(a => {
+            const details = a.details ? JSON.stringify(a.details) : "";
+            return `
+                <tr>
+                    <td class="td-mono" style="font-size:11px; color:#60a5fa;">${escapeHtml(a.audit_id)}</td>
+                    <td style="font-size:12px; color:var(--text-secondary);">${formatTimestamp(a.timestamp)}</td>
+                    <td><strong style="color:#ffffff;">${escapeHtml(a.actor)}</strong></td>
+                    <td><span class="badge" style="background:#1e293b; color:#93c5fd;">${escapeHtml(a.event)}</span></td>
+                    <td><strong style="color:#e2e8f0;">${escapeHtml(a.action)}</strong> &rarr; <code>${escapeHtml(a.target)}</code></td>
+                    <td style="font-size:11.5px;"><span style="color:var(--text-muted);">${escapeHtml(a.state_before)}</span> &rarr; <b>${escapeHtml(a.state_after)}</b></td>
+                    <td><span class="badge ${a.mode === 'live' ? 'badge-completed' : 'badge-simulated'}">${escapeHtml((a.mode || 'simulated').toUpperCase())}</span></td>
+                    <td style="font-size:11.5px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(details)}">
+                        ${escapeHtml(details || 'Logged')}
+                    </td>
+                </tr>
+            `;
+        }).join("");
+    } catch (err) {
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Error loading audit trail: ${escapeHtml(err.message)}</td></tr>`;
+        }
+    }
+}
+
+async function approveResponseAction(responseId) {
+    const reason = prompt("Enter analyst authorization reason:", "Approved via SOC Operations Console");
+    if (reason === null) return;
+
+    try {
+        const payload = {
+            approver: "soc_analyst",
+            reason: reason.trim() || "Approved via SOC Operations Console"
+        };
+        const res = await fetch(`${API_BASE}/api/responses/${encodeURIComponent(responseId)}/approve`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        const modeLabel = data.state === "SIMULATED" ? "Simulated (Dry-Run)" : "Live Wazuh Active Response";
+        alert(`Action '${data.action}' on '${data.target}' approved and executed (${modeLabel}).`);
+
+        await refreshAll();
+        if (selectedIncidentId) selectIncident(selectedIncidentId);
+    } catch (err) {
+        alert("Approval failed: " + err.message);
+    }
+}
+
+async function rejectResponseAction(responseId) {
+    const reason = prompt("Enter justification for rejecting this proposal:", "False positive or authorized system behavior");
+    if (reason === null) return;
+
+    try {
+        const payload = {
+            rejected_by: "soc_analyst",
+            reason: reason.trim() || "Rejected by analyst"
+        };
+        const res = await fetch(`${API_BASE}/api/responses/${encodeURIComponent(responseId)}/reject`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || `HTTP ${res.status}`);
+        }
+
+        alert("Action proposal rejected.");
+        await refreshAll();
+        if (selectedIncidentId) selectIncident(selectedIncidentId);
+    } catch (err) {
+        alert("Rejection failed: " + err.message);
+    }
+}
+
+async function rollbackResponseAction(responseId) {
+    if (!confirm("Are you sure you want to rollback and revert this containment action?")) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/responses/${encodeURIComponent(responseId)}/rollback?actor=soc_analyst`, {
+            method: "POST"
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        alert(`Rollback counter-action '${data.action}' executed successfully.`);
+        await refreshAll();
+        if (selectedIncidentId) selectIncident(selectedIncidentId);
+    } catch (err) {
+        alert("Rollback failed: " + err.message);
+    }
+}
+
+async function proposeResponseForIncident(incidentId) {
+    const inc = allIncidents.find(i => i.incident_id === incidentId);
+    if (!inc || !inc.response_recommendation) return;
+
+    const rec = inc.response_recommendation;
+    const leadAlertId = (inc.related_alert_ids && inc.related_alert_ids.length) ? inc.related_alert_ids[0] : incidentId;
+
+    try {
+        const payload = {
+            action: rec.action,
+            target: rec.target,
+            alert_id: leadAlertId,
+            reason: rec.reason || `Proposed from incident ${incidentId}`,
+            confidence: Number(rec.confidence || 0.8)
+        };
+
+        const res = await fetch(`${API_BASE}/api/responses/propose`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || `HTTP ${res.status}`);
+        }
+
+        alert(`Response proposal '${rec.action}' staged in approval queue.`);
+        await refreshAll();
+        selectIncident(incidentId);
+    } catch (err) {
+        alert("Proposal failed: " + err.message);
+    }
+}
+
+async function stageAlertResponse(alertId, action, target, reason) {
+    try {
+        const payload = {
+            action: action,
+            target: target,
+            alert_id: alertId,
+            reason: reason || `Staged from alert ${alertId}`,
+            confidence: 0.85
+        };
+
+        const res = await fetch(`${API_BASE}/api/responses/propose`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || `HTTP ${res.status}`);
+        }
+
+        alert(`Response proposal '${action}' staged in approval queue.`);
+        await refreshAll();
+        if (selectedAlertId) openAlertDeepAnalysis(selectedAlertId);
+    } catch (err) {
+        alert("Staging response failed: " + err.message);
+    }
 }

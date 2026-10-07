@@ -6,7 +6,7 @@ Manages the complete approval-gated response lifecycle:
 - Duplicate Execution Prevention (Idempotency)
 - Configurable Dry-Run / Simulated Execution (Default)
 - Rollback and Unblock Operations
-- Persistent Records and Tamper-Resistant Audit Logging
+- Persistent Records and Append-only Active Response Audit Trail
 """
 
 from __future__ import annotations
@@ -727,3 +727,58 @@ def clear_responses_for_testing() -> None:
                 os.remove(_AUDIT_FILE)
             except Exception:
                 pass
+
+
+def check_wazuh_manager_status() -> Dict[str, Any]:
+    """
+    Check Wazuh Manager API connectivity and authentication safely without raising exceptions
+    or exposing sensitive credentials.
+    """
+    manager_url = settings.WAZUH_MANAGER_URL.rstrip("/")
+    result: Dict[str, Any] = {
+        "url": manager_url,
+        "mode": settings.ACTIVE_RESPONSE_MODE,
+        "enabled": settings.ACTIVE_RESPONSE_ENABLED,
+        "reachable": False,
+        "authenticated": False,
+        "credentials_configured": bool(
+            settings.WAZUH_MANAGER_USER and settings.WAZUH_MANAGER_PASSWORD
+        ),
+        "error": None,
+    }
+
+    try:
+        # Check API connectivity
+        requests.get(f"{manager_url}/", timeout=3, verify=False)
+        result["reachable"] = True
+    except requests.exceptions.SSLError:
+        result["reachable"] = True
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+        result["error"] = f"Wazuh Manager port 55000 unreachable at {manager_url}."
+        return result
+    except Exception as e:
+        result["error"] = f"Manager check failed: {str(e)}"
+        return result
+
+    if not result["credentials_configured"]:
+        result["error"] = "Wazuh Manager credentials not configured in .env."
+        return result
+
+    try:
+        auth_resp = requests.post(
+            f"{manager_url}/security/user/authenticate",
+            auth=(settings.WAZUH_MANAGER_USER, settings.WAZUH_MANAGER_PASSWORD),
+            timeout=4,
+            verify=False,
+        )
+        if auth_resp.status_code == 200:
+            result["authenticated"] = True
+        elif auth_resp.status_code in (401, 403):
+            result["error"] = f"Wazuh Manager authentication rejected (HTTP {auth_resp.status_code})."
+        else:
+            result["error"] = f"Unexpected auth status (HTTP {auth_resp.status_code})."
+    except Exception as e:
+        result["error"] = f"Manager auth failed: {str(e)}"
+
+    return result
+

@@ -1453,3 +1453,216 @@ body {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* ==========================================================================
+   ACTIVE RESPONSE & AUDIT TRAIL COMPONENTS
+   ========================================================================== */
+
+.badge-pending {
+    background: rgba(217, 119, 6, 0.18);
+    color: #fde68a;
+    border: 1px solid rgba(217, 119, 6, 0.45);
+}
+
+.badge-simulated {
+    background: rgba(5, 150, 105, 0.18);
+    color: #6ee7b7;
+    border: 1px solid rgba(5, 150, 105, 0.45);
+}
+
+.badge-completed {
+    background: rgba(16, 185, 129, 0.2);
+    color: #86efac;
+    border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
+.badge-failed {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.badge-rejected {
+    background: rgba(75, 85, 99, 0.25);
+    color: #9ca3af;
+    border: 1px solid rgba(107, 114, 128, 0.4);
+}
+
+.badge-rollback {
+    background: rgba(139, 92, 246, 0.2);
+    color: #c4b5fd;
+    border: 1px solid rgba(139, 92, 246, 0.45);
+}
+
+.safeguards-banner {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.safeguard-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--bg-surface-subtle);
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+}
+
+.safeguard-icon {
+    font-size: 20px;
+}
+
+.safeguard-item strong {
+    font-size: 13px;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.safeguard-item p {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0;
+}
+
+.response-queue-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.response-card {
+    background: var(--bg-surface-subtle);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    transition: border-color 0.15s ease;
+}
+
+.response-card:hover {
+    border-color: var(--border-bold);
+}
+
+.response-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.response-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #60a5fa;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.response-card-meta {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+
+.response-card-reason {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    line-height: 1.45;
+}
+
+.response-exec-result {
+    background: #090d16;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin: 10px 0;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.response-exec-result strong {
+    color: #e2e8f0;
+}
+
+.response-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.btn-approve {
+    background: #059669;
+    color: #ffffff;
+    border: 1px solid #10b981;
+}
+
+.btn-approve:hover:not(:disabled) {
+    background: #047857;
+}
+
+.btn-reject {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.btn-reject:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+.btn-rollback {
+    background: rgba(139, 92, 246, 0.2);
+    color: #c4b5fd;
+    border: 1px solid rgba(139, 92, 246, 0.45);
+}
+
+.btn-rollback:hover:not(:disabled) {
+    background: rgba(139, 92, 246, 0.3);
+}
+
+.rec-interactive-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.safeguard-badge-passed {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+}
+
+.safeguard-badge-blocked {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+}

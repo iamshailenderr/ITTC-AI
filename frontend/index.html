@@ -27,6 +27,14 @@
                 <span class="status-dot"></span>
                 <span id="statusText">Backend Online (Port 8000)</span>
             </div>
+            <div id="indexerStatus" class="status-pill status-online" title="Wazuh Indexer (OpenSearch Telemetry)">
+                <span class="status-dot"></span>
+                <span id="indexerStatusText">Indexer Online</span>
+            </div>
+            <div id="managerStatus" class="status-pill status-online" title="Wazuh Manager (Active Response Engine)">
+                <span class="status-dot"></span>
+                <span id="managerStatusText">Manager Online</span>
+            </div>
 
             <button id="btnCorrelate" class="btn btn-secondary" onclick="triggerCorrelation()">
                 <span class="btn-icon">⚡</span> Run Correlation
@@ -95,6 +103,9 @@
             </button>
             <button class="tab-btn" onclick="switchTab('metricsTab')">
                 <span class="tab-icon">📊</span> Security Metrics
+            </button>
+            <button class="tab-btn" onclick="switchTab('responseTab')">
+                <span class="tab-icon">⚡</span> Active Response &amp; Audit
             </button>
         </nav>
 
@@ -352,6 +363,115 @@
                     </div>
                 </div>
 
+            </div>
+        </section>
+
+        <!-- TAB 6: ACTIVE RESPONSE & AUDIT TRAIL -->
+        <section id="responseTab" class="tab-content">
+            <div class="response-layout">
+                <!-- Response Mode & Safeguards Summary Card -->
+                <div class="panel-card" style="margin-bottom: 20px;">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Active Response Command &amp; Control</h2>
+                            <p class="panel-desc">Approval-gated automated threat containment with strict target safeguards and append-only audit tracking.</p>
+                        </div>
+                        <div class="response-mode-badge" id="arModeBadgeContainer">
+                            <span class="badge badge-simulated" id="arModeBadge">MODE: SIMULATED (DRY-RUN)</span>
+                        </div>
+                    </div>
+                    <div class="safeguards-banner">
+                        <div class="safeguard-item">
+                            <span class="safeguard-icon">🛡️</span>
+                            <div>
+                                <strong>Anti-Bricking Target Safeguards Active</strong>
+                                <p>Prohibits containment against Loopback, Gateways, DNS Resolvers (8.8.8.8, 1.1.1.1), Domain Controllers (DC-01), and Core System accounts.</p>
+                            </div>
+                        </div>
+                        <div class="safeguard-item">
+                            <span class="safeguard-icon">🔒</span>
+                            <div>
+                                <strong>Approval-Gated Authorization</strong>
+                                <p>Zero automatic unreviewed execution. Every action requires analyst confirmation or explicit approval.</p>
+                            </div>
+                        </div>
+                        <div class="safeguard-item">
+                            <span class="safeguard-icon">📜</span>
+                            <div>
+                                <strong>Append-Only Audit Trail</strong>
+                                <p>Every proposal, approval, execution, rejection, and rollback is permanently recorded in the audit log.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Central Response Queue -->
+                <div class="panel-card" style="margin-bottom: 20px;">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <h2>Central Response Queue</h2>
+                            <span class="badge badge-count" id="responseQueueCountBadge">0</span>
+                        </div>
+                        <div class="filter-controls">
+                            <select id="filterResponseState" onchange="filterResponses()" class="select-input">
+                                <option value="ALL">All States</option>
+                                <option value="PENDING_APPROVAL">Pending Approval</option>
+                                <option value="APPROVED">Approved</option>
+                                <option value="SIMULATED">Simulated</option>
+                                <option value="COMPLETED">Completed (Live)</option>
+                                <option value="FAILED">Failed</option>
+                                <option value="REJECTED">Rejected</option>
+                                <option value="ROLLED_BACK">Rolled Back</option>
+                            </select>
+                            <button class="btn btn-sm btn-secondary" onclick="loadActiveResponses()">
+                                <span class="btn-icon">🔄</span> Refresh Queue
+                            </button>
+                        </div>
+                    </div>
+                    <div id="responseQueueList" class="response-queue-feed">
+                        <div class="state-loading">
+                            <span class="spinner"></span> Loading Active Response records...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Append-only Audit Trail -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <h2>Append-Only Active Response Audit Trail</h2>
+                            <span class="badge badge-count" id="auditTrailCountBadge">0</span>
+                        </div>
+                        <div class="filter-controls">
+                            <button class="btn btn-sm btn-secondary" onclick="loadAuditTrail()">
+                                <span class="btn-icon">📜</span> Refresh Audit Log
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="soc-table">
+                            <thead>
+                                <tr>
+                                    <th>Audit ID</th>
+                                    <th>Timestamp</th>
+                                    <th>Actor</th>
+                                    <th>Event</th>
+                                    <th>Action &rarr; Target</th>
+                                    <th>State Transition</th>
+                                    <th>Mode</th>
+                                    <th>Execution Output / Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditTrailTableBody">
+                                <tr>
+                                    <td colspan="8" class="state-loading">
+                                        <span class="spinner"></span> Loading audit log entries...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </section>
 
