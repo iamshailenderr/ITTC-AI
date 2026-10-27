@@ -1,9 +1,4 @@
-"""
-Incident model for the ITTC-AI SOC platform.
-
-An Incident groups correlated security alerts into a single investigable entity.
-Status lifecycle: OPEN → INVESTIGATING → CONTAINED → RESOLVED
-"""
+"""Incident model for the ITTC-AI SOC platform."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -12,7 +7,6 @@ from pydantic import BaseModel, Field
 
 
 class TimelineEntry(BaseModel):
-    """A single event in the incident timeline."""
     timestamp: datetime
     event: str
     source: str = ""
@@ -20,31 +14,22 @@ class TimelineEntry(BaseModel):
 
 
 class AnalystNote(BaseModel):
-    """A note added by an analyst during investigation."""
     timestamp: datetime
     author: str = "analyst"
     content: str
 
 
 class Incident(BaseModel):
-    """
-    Correlated security incident grouping related alerts.
-
-    Status values:
-        OPEN         — newly created, not yet investigated
-        INVESTIGATING — analyst is actively working the incident
-        CONTAINED    — threat has been contained, pending resolution
-        RESOLVED     — incident fully resolved and closed
-    """
     incident_id: str
     created_at: datetime
     updated_at: datetime
-    status: str = "OPEN"  # OPEN | INVESTIGATING | CONTAINED | RESOLVED
+    status: str = "OPEN"
     severity: str = "medium"
     risk_score: int = Field(ge=0, le=100, default=50)
     confidence: float = Field(ge=0.0, le=1.0, default=0.5)
     related_alert_ids: List[str] = []
-    related_iocs: List[Dict[str, str]] = []  # [{"type": "ip", "value": "..."}]
+    related_iocs: List[Dict[str, str]] = []
+    ioc_intelligence: List[Dict[str, Any]] = []
     mitre_techniques: List[str] = []
     timeline: List[TimelineEntry] = []
     summary: str = ""
@@ -57,29 +42,23 @@ class Incident(BaseModel):
     analyst_notes: List[AnalystNote] = []
 
 
-# Request/response models for API endpoints
-
 class IncidentStatusUpdate(BaseModel):
-    """Request body for PATCH /api/incidents/{id}/status"""
-    status: str  # OPEN | INVESTIGATING | CONTAINED | RESOLVED
+    status: str
 
 
 class IncidentNoteRequest(BaseModel):
-    """Request body for POST /api/incidents/{id}/notes"""
     content: str
     author: str = "analyst"
 
 
 class CopilotRequest(BaseModel):
-    """Request body for POST /api/copilot/chat"""
     question: str
     incident_id: Optional[str] = None
     alert_id: Optional[str] = None
-    history: Optional[List[Dict[str, str]]] = None  # [{"role": "user/assistant", "content": "..."}]
+    history: Optional[List[Dict[str, str]]] = None
 
 
 class CopilotResponse(BaseModel):
-    """Response body for POST /api/copilot/chat"""
     answer: str
     sources: List[Dict[str, Any]] = []
     context: Dict[str, Any] = {}
