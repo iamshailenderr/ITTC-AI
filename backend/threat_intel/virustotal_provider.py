@@ -1,188 +1,193 @@
-"""
-VirusTotal Threat Intelligence Provider — OPTIONAL.
+"""VirusTotal v3 threat-intelligence provider.
 
-This provider is only active when the environment variable VIRUSTOTAL_API_KEY is set.
-If the key is absent, the system automatically falls back to MockThreatIntelProvider.
-
-Environment variable:
-    VIRUSTOTAL_API_KEY   — your VirusTotal public or private API key
-
-SECURITY NOTE:
-    - Never hardcode your API key in source code.
-    - Add VIRUSTOTAL_API_KEY to .gitignore / environment secrets.
-    - The free public API is rate-limited (4 req/min, 500 req/day).
-
-VirusTotal API v3 documentation:
-    https://docs.virustotal.com/reference/overview
+The provider is backend-only and is selected when VIRUSTOTAL_API_KEY is set.
+It never exposes raw VT responses to callers and returns a normalized
+IOCEnrichment object. Network/API failures are represented as an unavailable
+result so the rest of ITTC-AI can continue operating.
 """
 
 from __future__ import annotations
 
+import datetime as _dt
 import os
 from typing import Optional
 
 from backend.threat_intel.models import IOCEnrichment
 
-# Optional dependency — only imported if provider is actually used
 try:
     import requests as _requests
-    _REQUESTS_AVAILABLE = True
-except ImportError:
-    _REQUESTS_AVAILABLE = False
+except ImportError:  # pragma: no cover - environment dependency
+    _requests = None
 
 _VT_BASE = "https://www.virustotal.com/api/v3"
-_VT_TIMEOUT = 15  # seconds
+_VT_TIMEOUT = 15
 
 
 class VirusTotalProvider:
-    """
-    Optional VirusTotal v3 API provider.
+    """VirusTotal API v3 provider for IPs, domains, URLs and file hashes."""
 
-    Plug-in point for real threat intelligence.
-    Only instantiate this class when VIRUSTOTAL_API_KEY is present.
-    """
+    def __init__(self, api_key: str, timeout: int = _VT_TIMEOUT) -> None:
+        if _requests is None:
+            raise RuntimeError("The 'requests' package is required for VirusTotalProvider")
+        if not api_key or not api_key.strip():
+            raise ValueError("VirusTotal API key is required")
+        self._api_key = api_key.strip()
+        self._timeout = timeout
+        self._headers = {"x-apikey": self._api_key, "Accept": "application/json"}
 
-    def __init__(self, api_key: str) -> None:
-        if not _REQUESTS_AVAILABLE:
-            raise RuntimeError(
-                "The 'requests' package is required for VirusTotalProvider. "
-                "Install it with: pip install requests"
-            )
-        self._api_key = api_key
-        self._headers = {"x-apikey": api_key, "Accept": "application/json"}
+    def _unavailable(self, ioc_type: str, value: str, reason: str = "unavailable") -> IOCEnrichment:
+        return IOCEnrichment(
+            type=ioc_type,
+            value=value,
+            reputation="unknown",
+            confidence=0.0,
+            malicious=False,
+            source="VirusTotal",
+            provider_status="unavailable",
+            categories=[reason] if reason else [],
+        )
 
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
-
-    def _get(self, endpoint: str) -> Optional[dict]:
-        """Perform a GET request to the VT API; return parsed JSON or None."""
+    def _get(self, endpoint: str) -> tuple[Optional[dict], Optional[str]]:
         try:
             response = _requests.get(
                 f"{_VT_BASE}{endpoint}",
                 headers=self._headers,
-                timeout=_VT_TIMEOUT,
+                timeout=self._timeout,
             )
-            if response.status_code == 200:
-                return response.json()
-            # 404 → not found, 429 → rate limited
-            return None
+        except _requests.exceptions.Timeout:
+            return None, "timeout"
+        except _requests.exceptions.RequestException:
+            return None, "network_error"
         except Exception:
-            return None
+            return None, "network_error"
 
-    def _parse_stats(self, data: dict) -> tuple[str, float, bool, int]:
-        """
-        Parse analysis_stats from a VT response into
-        (reputation, confidence, malicious, detections).
-        """
-        stats: dict = (
-            data.get("data", {})
-                .get("attributes", {})
-                .get("last_analysis_stats", {})
-        )
-        malicious_count = stats.get("malicious", 0)
-        suspicious_count = stats.get("suspicious", 0)
-        total = sum(stats.values()) if stats else 0
+        if response.status_code == 200:
+            try:
+                return response.json(), None
+            except ValueError:
+                return None, "invalid_response"
+        if response.status_code == 401 or response.status_code == 403:
+            return None, "invalid_api_key"
+        if response.status_code == 404:
+            return None, "not_found"
+        if response.status_code == 429:
+            return None, "rate_limited"
+        if 500 <= response.status_code < 600:
+            return None, "service_unavailable"
+        return None, f"http_{response.status_code}"
+
+    @staticmethod
+    def _parse_stats(data: dict) -> dict:
+        attrs = data.get("data", {}).get("attributes", {}) or {}
+        stats = attrs.get("last_analysis_stats", {}) or {}
+        malicious_count = int(stats.get("malicious", 0) or 0)
+        suspicious_count = int(stats.get("suspicious", 0) or 0)
+        harmless_count = int(stats.get("harmless", 0) or 0)
+        undetected_count = int(stats.get("undetected", 0) or 0)
+        total = malicious_count + suspicious_count + harmless_count + undetected_count
         detections = malicious_count + suspicious_count
 
         if total == 0:
-            return "unknown", 0.0, False, 0
-
-        ratio = detections / total
-        if malicious_count >= 3:
+            reputation = "unknown"
+            malicious = False
+            confidence = 0.0
+        elif malicious_count >= 3 or (malicious_count > 0 and malicious_count / total >= 0.10):
             reputation = "malicious"
             malicious = True
-        elif suspicious_count >= 3 or ratio >= 0.05:
+            confidence = min(1.0, round(malicious_count / total * 1.5, 2))
+        elif suspicious_count >= 3 or suspicious_count / total >= 0.05:
             reputation = "suspicious"
             malicious = False
+            confidence = min(1.0, round(suspicious_count / total * 1.5, 2))
         else:
             reputation = "benign"
             malicious = False
-
-        confidence = min(1.0, round(ratio * 2, 2))   # rough heuristic
-        return reputation, confidence, malicious, detections
-
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
-    def enrich(self, ioc_type: str, value: str) -> IOCEnrichment:
-        """
-        Query VirusTotal for a given IOC and return structured enrichment.
-
-        Supported types: ip, domain, url, md5, sha1, sha256.
-        Unknown types return an 'unknown' enrichment without an API call.
-        """
-        endpoint_map = {
-            "ip":     f"/ip_addresses/{value}",
-            "domain": f"/domains/{value}",
-            "url":    f"/urls/{value}",
-            "md5":    f"/files/{value}",
-            "sha1":   f"/files/{value}",
-            "sha256": f"/files/{value}",
-        }
-
-        endpoint = endpoint_map.get(ioc_type.lower())
-        if not endpoint:
-            return IOCEnrichment(
-                type=ioc_type, value=value,
-                reputation="unknown", confidence=0.0,
-                malicious=False, source="VirusTotal",
-            )
-
-        data = self._get(endpoint)
-        if not data:
-            return IOCEnrichment(
-                type=ioc_type, value=value,
-                reputation="unknown", confidence=0.0,
-                malicious=False, source="VirusTotal",
-            )
-
-        reputation, confidence, malicious, detections = self._parse_stats(data)
-        attrs = data.get("data", {}).get("attributes", {})
+            confidence = round(max(harmless_count, undetected_count) / total, 2)
 
         categories_raw = attrs.get("categories", {})
         if isinstance(categories_raw, dict):
-            categories = list(set(categories_raw.values()))
+            categories = sorted({str(v) for v in categories_raw.values() if v})
         elif isinstance(categories_raw, list):
-            categories = categories_raw
+            categories = [str(v) for v in categories_raw if v]
         else:
             categories = []
 
-        # malware families (files only)
-        names_raw = attrs.get("popular_threat_classification", {})
+        reputation_score = attrs.get("reputation")
+        try:
+            reputation_score = int(reputation_score) if reputation_score is not None else None
+        except (TypeError, ValueError):
+            reputation_score = None
+
         malware_families: list[str] = []
-        if isinstance(names_raw, dict):
-            malware_families = [
-                e.get("value", "") for e in names_raw.get("popular_threat_name", [])
-            ]
+        classification = attrs.get("popular_threat_classification", {}) or {}
+        if isinstance(classification, dict):
+            names = classification.get("popular_threat_name", []) or []
+            if isinstance(names, list):
+                malware_families = [
+                    str(item.get("value")) for item in names
+                    if isinstance(item, dict) and item.get("value")
+                ]
 
-        last_seen_ts = attrs.get("last_analysis_date") or attrs.get("last_seen_itw_date")
-        last_seen: Optional[str] = None
-        if last_seen_ts:
-            import datetime
-            last_seen = datetime.datetime.utcfromtimestamp(last_seen_ts).isoformat() + "Z"
+        analysis_timestamp = None
+        ts = attrs.get("last_analysis_date")
+        if ts:
+            try:
+                analysis_timestamp = _dt.datetime.fromtimestamp(int(ts), tz=_dt.timezone.utc).isoformat()
+            except (TypeError, ValueError, OSError):
+                analysis_timestamp = None
 
+        return {
+            "reputation": reputation,
+            "malicious": malicious,
+            "confidence": confidence,
+            "malicious_count": malicious_count,
+            "suspicious_count": suspicious_count,
+            "harmless_count": harmless_count,
+            "undetected_count": undetected_count,
+            "total_engines": total,
+            "detections": detections,
+            "categories": categories,
+            "reputation_score": reputation_score,
+            "malware_families": malware_families,
+            "analysis_timestamp": analysis_timestamp,
+        }
+
+    def enrich(self, ioc_type: str, value: str) -> IOCEnrichment:
+        normalized_type = ioc_type.lower().strip()
+        normalized_value = value.strip()
+        endpoint_map = {
+            "ip": f"/ip_addresses/{normalized_value}",
+            "domain": f"/domains/{normalized_value}",
+            "url": f"/urls/{normalized_value}",
+            "md5": f"/files/{normalized_value}",
+            "sha1": f"/files/{normalized_value}",
+            "sha256": f"/files/{normalized_value}",
+        }
+        endpoint = endpoint_map.get(normalized_type)
+        if not endpoint:
+            return self._unavailable(normalized_type, normalized_value, "unsupported_type")
+
+        data, error = self._get(endpoint)
+        if data is None:
+            return self._unavailable(normalized_type, normalized_value, error or "unavailable")
+
+        parsed = self._parse_stats(data)
         return IOCEnrichment(
-            type=ioc_type,
-            value=value,
-            reputation=reputation,
-            confidence=confidence,
-            malicious=malicious,
+            type=normalized_type,
+            value=normalized_value,
             source="VirusTotal",
-            categories=categories,
-            detections=detections,
-            malware_families=malware_families,
-            last_seen=last_seen,
+            provider_status="available",
+            last_seen=parsed["analysis_timestamp"],
+            analysis_timestamp=parsed["analysis_timestamp"],
+            **{k: v for k, v in parsed.items() if k != "analysis_timestamp"},
         )
 
 
 def get_virustotal_provider() -> Optional[VirusTotalProvider]:
-    """
-    Return a VirusTotalProvider if VIRUSTOTAL_API_KEY is set in environment.
-    Returns None if the key is absent (caller should use MockThreatIntelProvider).
-    """
     api_key = os.environ.get("VIRUSTOTAL_API_KEY", "").strip()
     if not api_key:
         return None
-    return VirusTotalProvider(api_key)
+    try:
+        return VirusTotalProvider(api_key)
+    except Exception:
+        return None
