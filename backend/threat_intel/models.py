@@ -20,14 +20,8 @@ class IOCEnrichment(BaseModel):
     """
     Threat intelligence enrichment result for a single IOC.
 
-    reputation:
-        malicious   - confirmed threat
-        suspicious  - elevated risk
-        benign      - known safe
-        unknown     - no data available
-
-    source is labelled "Mock Threat Intelligence (SYNTHETIC)"
-    for the local mock provider so analysts know it is not real data.
+    provider_status is deliberately explicit so the UI/AI layer can distinguish
+    real provider data from an unavailable provider or offline synthetic fallback.
     """
     type: str
     value: str
@@ -35,7 +29,15 @@ class IOCEnrichment(BaseModel):
     confidence: float                       # 0.0 – 1.0
     malicious: bool
     source: str
+    provider_status: str = "available"      # available | fallback | unavailable
     categories: List[str] = []
-    detections: Optional[int] = None        # e.g. 42 out of 72 engines
+    detections: Optional[int] = None        # malicious + suspicious detections
+    malicious_count: Optional[int] = None
+    suspicious_count: Optional[int] = None
+    harmless_count: Optional[int] = None
+    undetected_count: Optional[int] = None
+    total_engines: Optional[int] = None
+    reputation_score: Optional[int] = None
     malware_families: List[str] = []
-    last_seen: Optional[str] = None         # ISO-8601 string or None
+    last_seen: Optional[str] = None
+    analysis_timestamp: Optional[str] = None
