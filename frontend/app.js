@@ -501,13 +501,35 @@ function renderIncidentDossier(incident) {
 
     // Build IOC Tags
     const iocs = incident.related_iocs || [];
-    const iocsHtml = iocs.length ? iocs.map(ioc => `
-        <span class="ioc-pill" onclick="searchIOCFromDossier('${escapeHtml(ioc.type || 'ip')}', '${escapeHtml(ioc.value)}')">
-            <span>${escapeHtml(ioc.type)}:</span>
-            <strong>${escapeHtml(ioc.value)}</strong>
-            <span style="font-size: 10px; opacity: 0.7;">🔍</span>
-        </span>
-    `).join("") : `<span style="color: var(--text-muted); font-size: 12px;">No IOCs extracted</span>`;
+    const tiMap = {};
+    (incident.ioc_intelligence || []).forEach(ti => {
+        if (ti && ti.value) tiMap[ti.value.toLowerCase()] = ti;
+    });
+
+    const iocsHtml = iocs.length ? iocs.map(ioc => {
+        const ti = tiMap[(ioc.value || '').toLowerCase()];
+        let badgeHtml = '';
+        if (ti) {
+            if (ti.malicious) {
+                badgeHtml = `<span class="badge badge-critical" style="font-size:9px; padding: 1px 4px; margin-left: 4px;">MALICIOUS</span>`;
+            } else if (String(ti.reputation).toLowerCase() === 'suspicious') {
+                badgeHtml = `<span class="badge badge-high" style="font-size:9px; padding: 1px 4px; margin-left: 4px;">SUSPICIOUS</span>`;
+            }
+            if (ti.source === 'VirusTotal' && ti.provider_status === 'available') {
+                badgeHtml += `<span class="badge badge-count" style="font-size:9px; padding: 1px 4px; margin-left: 2px;">VT Live</span>`;
+            } else if (ti.provider_status === 'fallback') {
+                badgeHtml += `<span class="badge badge-count" style="font-size:9px; padding: 1px 4px; margin-left: 2px;">Fallback</span>`;
+            }
+        }
+        return `
+            <span class="ioc-pill" onclick="searchIOCFromDossier('${escapeHtml(ioc.type || 'ip')}', '${escapeHtml(ioc.value)}')">
+                <span>${escapeHtml(ioc.type)}:</span>
+                <strong>${escapeHtml(ioc.value)}</strong>
+                ${badgeHtml}
+                <span style="font-size: 10px; opacity: 0.7; margin-left: 2px;">🔍</span>
+            </span>
+        `;
+    }).join("") : `<span style="color: var(--text-muted); font-size: 12px;">No IOCs extracted</span>`;
 
     // Build MITRE Techniques
     const mitreTechs = incident.mitre_techniques || [];
@@ -1007,6 +1029,19 @@ function renderIOCResults(data) {
         ? `<span class="badge badge-high">SUSPICIOUS</span>`
         : `<span class="badge badge-low">UNKNOWN / CLEAN</span>`;
 
+    const isLiveVT = (data.source === "VirusTotal" || (data.source && data.source.includes("VirusTotal") && !data.source.includes("unavailable"))) && data.provider_status === "available";
+    const isFallback = data.provider_status === "fallback" || (data.source && data.source.includes("unavailable"));
+    const statusBadge = isLiveVT
+        ? `<span class="badge badge-low" style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4);">LIVE VIRUSTOTAL</span>`
+        : isFallback
+        ? `<span class="badge badge-high" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);">OFFLINE FALLBACK</span>`
+        : `<span class="badge badge-neutral">SYNTHETIC TI</span>`;
+
+    const totalEngines = data.total_engines || 70;
+    const detRatio = data.detections !== null && data.detections !== undefined
+        ? `${data.detections}/${totalEngines}`
+        : 'N/A';
+
     const relatedAlertsHtml = (data.related_alert_ids && data.related_alert_ids.length)
         ? data.related_alert_ids.map(id => `
             <span class="badge badge-count" style="cursor:pointer; color:#60a5fa;" onclick="switchTab('alertsTab'); document.getElementById('searchAlerts').value='${id}'; filterAlerts();">
@@ -1023,6 +1058,23 @@ function renderIOCResults(data) {
         `).join(" ")
         : `<span style="color: var(--text-muted); font-size: 13px;">No incidents directly mapped</span>`;
 
+    const hasCounts = data.malicious_count !== null && data.malicious_count !== undefined;
+    const breakdownHtml = hasCounts ? `
+        <div style="display: flex; gap: 14px; flex-wrap: wrap; margin: 8px 0; font-size: 12px; background: var(--bg-surface-elevated); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <span style="color: #f87171;"><strong>Malicious:</strong> ${data.malicious_count}</span>
+            <span style="color: #fbbf24;"><strong>Suspicious:</strong> ${data.suspicious_count || 0}</span>
+            <span style="color: #4ade80;"><strong>Harmless:</strong> ${data.harmless_count || 0}</span>
+            <span style="color: #94a3b8;"><strong>Undetected:</strong> ${data.undetected_count || 0}</span>
+            ${data.reputation_score !== null && data.reputation_score !== undefined ? `<span style="color: #38bdf8;"><strong>Reputation Score:</strong> ${data.reputation_score}</span>` : ''}
+        </div>
+    ` : '';
+
+    const attributionNote = isLiveVT
+        ? `<p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">* Verified external threat intelligence provided by VirusTotal v3 API.</p>`
+        : isFallback
+        ? `<p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">* VirusTotal service was unavailable; synthetic fallback data is shown.</p>`
+        : `<p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">* All mock IOC metadata is synthetic for demo/evaluation.</p>`;
+
     area.innerHTML = `
         <div class="ioc-dossier-card">
             <div class="ioc-dossier-header">
@@ -1030,7 +1082,7 @@ function renderIOCResults(data) {
                     <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">${escapeHtml(data.ioc_type)}</span>
                     <h3 style="font-family: var(--font-mono); font-size: 20px; color: #ffffff; margin-top: 4px;">${escapeHtml(data.value)}</h3>
                 </div>
-                <div>${repBadge}</div>
+                <div style="display: flex; gap: 6px; align-items: center;">${statusBadge} ${repBadge}</div>
             </div>
 
             <div class="ioc-dossier-grid">
@@ -1040,22 +1092,26 @@ function renderIOCResults(data) {
                 </div>
                 <div class="vital-box">
                     <div class="vital-label">Detection Ratio</div>
-                    <div class="vital-val" style="color: #fbbf24;">${data.detections !== null && data.detections !== undefined ? `${data.detections}/70` : 'N/A'}</div>
+                    <div class="vital-val" style="color: #fbbf24;">${detRatio}</div>
                 </div>
                 <div class="vital-box">
                     <div class="vital-label">Malware Families</div>
                     <div class="vital-val" style="font-size: 14px; color: #ffffff;">${(data.malware_families && data.malware_families.length) ? data.malware_families.join(', ') : 'None'}</div>
                 </div>
                 <div class="vital-box">
-                    <div class="vital-label">Last Observed</div>
-                    <div class="vital-val" style="font-size: 12px; color: var(--text-secondary);">${formatTimestamp(data.last_seen) || 'Active'}</div>
+                    <div class="vital-label">Last Analysis</div>
+                    <div class="vital-val" style="font-size: 12px; color: var(--text-secondary);">${formatTimestamp(data.analysis_timestamp || data.last_seen) || 'Active'}</div>
                 </div>
             </div>
 
             <div class="section-block">
                 <div class="section-head"><h4>Threat Intelligence Attribution</h4></div>
-                <p style="font-size: 13px; color: var(--text-secondary);">${escapeHtml(data.source || 'Threat Intelligence Engine')}</p>
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">* All mock IOC metadata is synthetic for demo/evaluation.</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-size: 13px; color: var(--text-secondary);"><strong>Source:</strong> ${escapeHtml(data.source || 'Threat Intelligence Engine')}</span>
+                    <div>${statusBadge}</div>
+                </div>
+                ${breakdownHtml}
+                ${attributionNote}
             </div>
 
             <div class="section-block">

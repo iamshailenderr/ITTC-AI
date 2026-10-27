@@ -19,6 +19,7 @@ class IOCInvestigation(BaseModel):
     source: str = ""
     provider_status: str = "available"
     categories: List[str] = Field(default_factory=list)
+    category: List[str] = Field(default_factory=list)
     detections: Optional[int] = None
     malicious_count: Optional[int] = None
     suspicious_count: Optional[int] = None
@@ -64,6 +65,7 @@ def investigate_ioc(ioc_type: str, ioc_value: str) -> IOCInvestigation:
         source=enrichment.source,
         provider_status=enrichment.provider_status,
         categories=enrichment.categories,
+        category=enrichment.categories,
         detections=enrichment.detections,
         malicious_count=enrichment.malicious_count,
         suspicious_count=enrichment.suspicious_count,

@@ -177,6 +177,11 @@ def generate_alert_report_data(alert_id: str) -> Optional[Dict[str, Any]]:
                 "value": ioc.value,
                 "reputation": enriched.reputation if hasattr(enriched, "reputation") else "Unknown",
                 "malicious": getattr(enriched, "malicious", False),
+                "source": getattr(enriched, "source", "Threat Intel"),
+                "provider_status": getattr(enriched, "provider_status", "available"),
+                "detections": getattr(enriched, "detections", None),
+                "malicious_count": getattr(enriched, "malicious_count", None),
+                "total_engines": getattr(enriched, "total_engines", None),
             })
         except Exception:
             iocs_data.append({
@@ -184,6 +189,8 @@ def generate_alert_report_data(alert_id: str) -> Optional[Dict[str, Any]]:
                 "value": ioc.value,
                 "reputation": "Unknown",
                 "malicious": False,
+                "source": "Threat Intel",
+                "provider_status": "unavailable",
             })
 
     # 3. Anomaly detection & Kill Chain

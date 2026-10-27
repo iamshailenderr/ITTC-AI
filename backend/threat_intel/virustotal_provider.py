@@ -49,7 +49,7 @@ class VirusTotalProvider:
         if response.status_code == 200:
             try:
                 return response.json(), None
-            except ValueError:
+            except (ValueError, TypeError):
                 return None, "invalid_response"
         if response.status_code in (401, 403):
             return None, "invalid_api_key"
@@ -63,8 +63,17 @@ class VirusTotalProvider:
 
     @staticmethod
     def _parse_stats(data: dict) -> dict:
-        attrs = data.get("data", {}).get("attributes", {}) or {}
-        stats = attrs.get("last_analysis_stats", {}) or {}
+        if not isinstance(data, dict):
+            data = {}
+        data_obj = data.get("data")
+        if not isinstance(data_obj, dict):
+            data_obj = {}
+        attrs = data_obj.get("attributes")
+        if not isinstance(attrs, dict):
+            attrs = {}
+        stats = attrs.get("last_analysis_stats")
+        if not isinstance(stats, dict):
+            stats = {}
         malicious_count = int(stats.get("malicious", 0) or 0)
         suspicious_count = int(stats.get("suspicious", 0) or 0)
         harmless_count = int(stats.get("harmless", 0) or 0)
@@ -77,14 +86,14 @@ class VirusTotalProvider:
         elif malicious_count >= 3 or (malicious_count > 0 and malicious_count / total >= 0.10):
             reputation, malicious = "malicious", True
             confidence = min(1.0, round(malicious_count / total * 1.5, 2))
-        elif suspicious_count >= 3 or suspicious_count / total >= 0.05:
+        elif suspicious_count >= 3 or (total > 0 and suspicious_count / total >= 0.05):
             reputation, malicious = "suspicious", False
             confidence = min(1.0, round(suspicious_count / total * 1.5, 2))
         else:
             reputation, malicious = "benign", False
             confidence = round(max(harmless_count, undetected_count) / total, 2)
 
-        categories_raw = attrs.get("categories", {})
+        categories_raw = attrs.get("categories")
         if isinstance(categories_raw, dict):
             categories = sorted({str(v) for v in categories_raw.values() if v})
         elif isinstance(categories_raw, list):
@@ -99,9 +108,9 @@ class VirusTotalProvider:
             reputation_score = None
 
         malware_families: list[str] = []
-        classification = attrs.get("popular_threat_classification", {}) or {}
+        classification = attrs.get("popular_threat_classification")
         if isinstance(classification, dict):
-            names = classification.get("popular_threat_name", []) or []
+            names = classification.get("popular_threat_name")
             if isinstance(names, list):
                 malware_families = [str(item.get("value")) for item in names if isinstance(item, dict) and item.get("value")]
 
@@ -118,6 +127,8 @@ class VirusTotalProvider:
     def enrich(self, ioc_type: str, value: str) -> IOCEnrichment:
         normalized_type = ioc_type.lower().strip()
         normalized_value = value.strip()
+        if normalized_type in ("md5", "sha1", "sha256", "domain"):
+            normalized_value = normalized_value.lower()
         endpoint_map = {
             "ip": f"/ip_addresses/{normalized_value}",
             "domain": f"/domains/{normalized_value}",

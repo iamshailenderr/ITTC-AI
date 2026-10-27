@@ -69,9 +69,7 @@ def _enrich_cluster_iocs(all_iocs: List[Dict[str, str]]) -> List[Dict]:
     """Return normalized TI evidence for the cluster's IOCs."""
     try:
         provider = get_provider()
-        ioc_models = [type("IOCValue", (), ioc)() for ioc in all_iocs]
-        # Provider interface accepts the same type/value attributes as IOC models.
-        enrichments = [provider.enrich(i.type, i.value) for i in ioc_models]
+        enrichments = [provider.enrich(ioc.get("type", "ip"), ioc.get("value", "")) for ioc in all_iocs]
         return [e.model_dump() for e in enrichments]
     except Exception:
         return []
@@ -145,7 +143,7 @@ def correlate_alerts(alerts: Optional[List[SecurityAlert]] = None, window_hours:
         any_anomalous = any(r[1] for r in anom_results)
         lead_alert = max(cluster_alerts, key=lambda a: {"critical": 4, "high": 3, "medium": 2, "low": 1}.get(a.severity.lower(), 0))
         rec_dict = generate_response_recommendation(lead_alert, risk_score=risk_score).model_dump()
-        risk_factors_dicts = [f.model_dump() for f in compute_risk_factors(alert=lead_alert, mitre_techniques=cluster_techs, anomaly_score=max_anomaly_score, is_anomalous=any_anomalous, correlated_alert_count=len(cluster_alerts))]
+        risk_factors_dicts = [f.model_dump() for f in compute_risk_factors(alert=lead_alert, enrichments=ioc_intelligence, mitre_techniques=cluster_techs, anomaly_score=max_anomaly_score, is_anomalous=any_anomalous, correlated_alert_count=len(cluster_alerts))]
 
         if existing:
             existing.related_alert_ids = list(set(existing.related_alert_ids + alert_ids))

@@ -683,10 +683,29 @@ def build_alert_pdf(report: Dict[str, Any]) -> bytes:
             ]
         ]
         for ioc in iocs:
+            rep = (ioc.get("reputation") or "Unknown").capitalize()
+            source = ioc.get("source", "")
+            status = ioc.get("provider_status", "")
+            mal_count = ioc.get("malicious_count")
+            total_eng = ioc.get("total_engines")
+
+            ti_desc = rep
+            if mal_count is not None and total_eng:
+                ti_desc += f" ({mal_count}/{total_eng} engines)"
+            elif ioc.get("detections") is not None:
+                ti_desc += f" ({ioc.get('detections')} detections)"
+
+            if "virustotal" in source.lower() and status == "available":
+                ti_desc += " [VT Live]"
+            elif status == "fallback" or "mock" in source.lower() or "synthetic" in source.lower():
+                ti_desc += " [Fallback/Offline]"
+            elif status == "unavailable":
+                ti_desc += " [TI Unavailable]"
+
             ioc_rows.append([
                 Paragraph(sanitize_text(ioc.get("type", "").upper()), styles["TableCellBold"]),
                 Paragraph(sanitize_text(ioc.get("value", "")), styles["TableCellMono"]),
-                Paragraph(sanitize_text(ioc.get("reputation", "Unknown")), styles["TableCell"]),
+                Paragraph(sanitize_text(ti_desc), styles["TableCell"]),
             ])
         t_iocs = Table(ioc_rows, colWidths=[90, 250, 200])
         t_iocs.setStyle(
