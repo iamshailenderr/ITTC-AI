@@ -1,8 +1,8 @@
 """Threat Intelligence provider orchestration.
 
-The rest of ITTC-AI talks only to this module and the normalized IOCEnrichment
-model. VirusTotal is preferred when configured; the existing synthetic provider
-remains the offline-safe fallback.
+VirusTotal is preferred when configured. If a live VT lookup fails, the existing
+synthetic/offline provider is used so IOC investigation and the rest of the SOC
+pipeline continue working.
 """
 
 from __future__ import annotations
@@ -19,13 +19,40 @@ class ThreatIntelProvider(Protocol):
         ...
 
 
+class _FallbackProvider:
+    """Use the preferred provider first, then fall back to the existing mock."""
+
+    def __init__(self, primary: ThreatIntelProvider, fallback: ThreatIntelProvider) -> None:
+        self.primary = primary
+        self.fallback = fallback
+
+    def enrich(self, ioc_type: str, value: str) -> IOCEnrichment:
+        try:
+            result = self.primary.enrich(ioc_type, value)
+            if result.provider_status != "unavailable":
+                return result
+        except Exception:
+            pass
+
+        result = self.fallback.enrich(ioc_type, value)
+        return result.model_copy(
+            update={
+                "provider_status": "fallback",
+                "source": f"{result.source}; VirusTotal unavailable",
+            }
+        )
+
+
 def get_provider() -> ThreatIntelProvider:
     """Return VirusTotal when configured, otherwise the existing mock provider."""
+    fallback = None
     api_key = os.environ.get("VIRUSTOTAL_API_KEY", "").strip()
     if api_key:
         try:
             from backend.threat_intel.virustotal_provider import VirusTotalProvider
-            return VirusTotalProvider(api_key)
+            from backend.threat_intel.mock_provider import MockThreatIntelProvider
+            fallback = MockThreatIntelProvider()
+            return _FallbackProvider(VirusTotalProvider(api_key), fallback)
         except Exception:
             pass
 
