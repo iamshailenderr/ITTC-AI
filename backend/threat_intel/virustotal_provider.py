@@ -1,13 +1,8 @@
-"""VirusTotal v3 threat-intelligence provider.
-
-The provider is backend-only and is selected when VIRUSTOTAL_API_KEY is set.
-It never exposes raw VT responses to callers and returns a normalized
-IOCEnrichment object. Network/API failures are represented as an unavailable
-result so the rest of ITTC-AI can continue operating.
-"""
+"""VirusTotal v3 threat-intelligence provider."""
 
 from __future__ import annotations
 
+import base64
 import datetime as _dt
 import os
 from typing import Optional
@@ -16,7 +11,7 @@ from backend.threat_intel.models import IOCEnrichment
 
 try:
     import requests as _requests
-except ImportError:  # pragma: no cover - environment dependency
+except ImportError:  # pragma: no cover
     _requests = None
 
 _VT_BASE = "https://www.virustotal.com/api/v3"
@@ -35,38 +30,28 @@ class VirusTotalProvider:
         self._timeout = timeout
         self._headers = {"x-apikey": self._api_key, "Accept": "application/json"}
 
+    @staticmethod
+    def _url_id(value: str) -> str:
+        return base64.urlsafe_b64encode(value.encode("utf-8")).decode("ascii").rstrip("=")
+
     def _unavailable(self, ioc_type: str, value: str, reason: str = "unavailable") -> IOCEnrichment:
-        return IOCEnrichment(
-            type=ioc_type,
-            value=value,
-            reputation="unknown",
-            confidence=0.0,
-            malicious=False,
-            source="VirusTotal",
-            provider_status="unavailable",
-            categories=[reason] if reason else [],
-        )
+        return IOCEnrichment(type=ioc_type, value=value, reputation="unknown", confidence=0.0, malicious=False, source="VirusTotal", provider_status="unavailable", categories=[reason] if reason else [])
 
     def _get(self, endpoint: str) -> tuple[Optional[dict], Optional[str]]:
         try:
-            response = _requests.get(
-                f"{_VT_BASE}{endpoint}",
-                headers=self._headers,
-                timeout=self._timeout,
-            )
+            response = _requests.get(f"{_VT_BASE}{endpoint}", headers=self._headers, timeout=self._timeout)
         except _requests.exceptions.Timeout:
             return None, "timeout"
         except _requests.exceptions.RequestException:
             return None, "network_error"
         except Exception:
             return None, "network_error"
-
         if response.status_code == 200:
             try:
                 return response.json(), None
             except ValueError:
                 return None, "invalid_response"
-        if response.status_code == 401 or response.status_code == 403:
+        if response.status_code in (401, 403):
             return None, "invalid_api_key"
         if response.status_code == 404:
             return None, "not_found"
@@ -88,20 +73,15 @@ class VirusTotalProvider:
         detections = malicious_count + suspicious_count
 
         if total == 0:
-            reputation = "unknown"
-            malicious = False
-            confidence = 0.0
+            reputation, malicious, confidence = "unknown", False, 0.0
         elif malicious_count >= 3 or (malicious_count > 0 and malicious_count / total >= 0.10):
-            reputation = "malicious"
-            malicious = True
+            reputation, malicious = "malicious", True
             confidence = min(1.0, round(malicious_count / total * 1.5, 2))
         elif suspicious_count >= 3 or suspicious_count / total >= 0.05:
-            reputation = "suspicious"
-            malicious = False
+            reputation, malicious = "suspicious", False
             confidence = min(1.0, round(suspicious_count / total * 1.5, 2))
         else:
-            reputation = "benign"
-            malicious = False
+            reputation, malicious = "benign", False
             confidence = round(max(harmless_count, undetected_count) / total, 2)
 
         categories_raw = attrs.get("categories", {})
@@ -123,10 +103,7 @@ class VirusTotalProvider:
         if isinstance(classification, dict):
             names = classification.get("popular_threat_name", []) or []
             if isinstance(names, list):
-                malware_families = [
-                    str(item.get("value")) for item in names
-                    if isinstance(item, dict) and item.get("value")
-                ]
+                malware_families = [str(item.get("value")) for item in names if isinstance(item, dict) and item.get("value")]
 
         analysis_timestamp = None
         ts = attrs.get("last_analysis_date")
@@ -134,23 +111,9 @@ class VirusTotalProvider:
             try:
                 analysis_timestamp = _dt.datetime.fromtimestamp(int(ts), tz=_dt.timezone.utc).isoformat()
             except (TypeError, ValueError, OSError):
-                analysis_timestamp = None
+                pass
 
-        return {
-            "reputation": reputation,
-            "malicious": malicious,
-            "confidence": confidence,
-            "malicious_count": malicious_count,
-            "suspicious_count": suspicious_count,
-            "harmless_count": harmless_count,
-            "undetected_count": undetected_count,
-            "total_engines": total,
-            "detections": detections,
-            "categories": categories,
-            "reputation_score": reputation_score,
-            "malware_families": malware_families,
-            "analysis_timestamp": analysis_timestamp,
-        }
+        return {"reputation": reputation, "malicious": malicious, "confidence": confidence, "malicious_count": malicious_count, "suspicious_count": suspicious_count, "harmless_count": harmless_count, "undetected_count": undetected_count, "total_engines": total, "detections": detections, "categories": categories, "reputation_score": reputation_score, "malware_families": malware_families, "analysis_timestamp": analysis_timestamp}
 
     def enrich(self, ioc_type: str, value: str) -> IOCEnrichment:
         normalized_type = ioc_type.lower().strip()
@@ -158,7 +121,7 @@ class VirusTotalProvider:
         endpoint_map = {
             "ip": f"/ip_addresses/{normalized_value}",
             "domain": f"/domains/{normalized_value}",
-            "url": f"/urls/{normalized_value}",
+            "url": f"/urls/{self._url_id(normalized_value)}",
             "md5": f"/files/{normalized_value}",
             "sha1": f"/files/{normalized_value}",
             "sha256": f"/files/{normalized_value}",
@@ -166,21 +129,11 @@ class VirusTotalProvider:
         endpoint = endpoint_map.get(normalized_type)
         if not endpoint:
             return self._unavailable(normalized_type, normalized_value, "unsupported_type")
-
         data, error = self._get(endpoint)
         if data is None:
             return self._unavailable(normalized_type, normalized_value, error or "unavailable")
-
         parsed = self._parse_stats(data)
-        return IOCEnrichment(
-            type=normalized_type,
-            value=normalized_value,
-            source="VirusTotal",
-            provider_status="available",
-            last_seen=parsed["analysis_timestamp"],
-            analysis_timestamp=parsed["analysis_timestamp"],
-            **{k: v for k, v in parsed.items() if k != "analysis_timestamp"},
-        )
+        return IOCEnrichment(type=normalized_type, value=normalized_value, source="VirusTotal", provider_status="available", last_seen=parsed["analysis_timestamp"], analysis_timestamp=parsed["analysis_timestamp"], **{k: v for k, v in parsed.items() if k != "analysis_timestamp"})
 
 
 def get_virustotal_provider() -> Optional[VirusTotalProvider]:
