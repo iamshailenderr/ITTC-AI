@@ -4,9 +4,12 @@ Exposes REST endpoints for the AI pipeline, incident management,
 IOC investigation, SOC Copilot, and dashboard.
 """
 
+import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from fastapi import FastAPI, HTTPException, Security, Depends, status
+from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, Security, Depends, status, Response
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
@@ -56,7 +59,20 @@ from backend.services.active_response import (
     check_wazuh_manager_status,
 )
 from backend.ai.copilot import copilot_chat
-from backend.services.reporting import generate_incident_report
+from backend.services.reporting import (
+    generate_incident_report,
+    generate_alert_report_data,
+    generate_alert_pdf,
+    generate_soc_report_data,
+    generate_soc_pdf,
+)
+
+
+class SOCReportRequest(BaseModel):
+    """Request payload for aggregate SOC reporting."""
+    period: str = "last_24h"
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
@@ -252,6 +268,101 @@ def get_incident_report_endpoint(incident_id: str) -> Dict[str, Any]:
     if report is None:
         raise HTTPException(status_code=404, detail=f"Incident '{incident_id}' not found")
     return report
+
+
+# ==========================================
+# Alert & SOC PDF / JSON Reporting Endpoints
+# ==========================================
+
+@app.get("/api/reports/alerts/{alert_id}")
+def get_alert_report_endpoint(alert_id: str) -> Dict[str, Any]:
+    """Return structured JSON data for an individual alert report."""
+    report = generate_alert_report_data(alert_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail=f"Alert '{alert_id}' not found")
+    return report
+
+
+@app.get("/api/reports/alerts/{alert_id}/pdf")
+def get_alert_report_pdf_endpoint(alert_id: str) -> Response:
+    """Generate and download a professional PDF report for an individual alert."""
+    try:
+        pdf_bytes = generate_alert_pdf(alert_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate alert PDF: {str(e)}")
+
+    if pdf_bytes is None:
+        raise HTTPException(status_code=404, detail=f"Alert '{alert_id}' not found")
+
+    safe_id = re.sub(r"[^a-zA-Z0-9_\-]", "_", alert_id)
+    filename = f"ITTC_Alert_Report_{safe_id}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-cache",
+        },
+    )
+
+
+@app.post("/api/reports/soc")
+def get_soc_report_endpoint(req: SOCReportRequest) -> Dict[str, Any]:
+    """Return structured JSON data for an aggregate SOC threat report."""
+    try:
+        return generate_soc_report_data(
+            period=req.period,
+            start_time=req.start_time,
+            end_time=req.end_time,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate SOC report: {str(e)}")
+
+
+@app.post("/api/reports/soc/pdf")
+def get_soc_report_pdf_post_endpoint(req: SOCReportRequest) -> Response:
+    """Generate and download an aggregate SOC PDF report via POST."""
+    try:
+        pdf_bytes = generate_soc_pdf(
+            period=req.period,
+            start_time=req.start_time,
+            end_time=req.end_time,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate SOC PDF: {str(e)}")
+
+    safe_period = re.sub(r"[^a-zA-Z0-9_\-]", "_", req.period)
+    if req.period == "custom" and req.start_time and req.end_time:
+        safe_start = re.sub(r"[^a-zA-Z0-9_\-]", "_", str(req.start_time)[:10])
+        safe_end = re.sub(r"[^a-zA-Z0-9_\-]", "_", str(req.end_time)[:10])
+        filename = f"ITTC_SOC_Report_{safe_start}_{safe_end}.pdf"
+    else:
+        date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
+        filename = f"ITTC_SOC_Report_{safe_period}_{date_str}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-cache",
+        },
+    )
+
+
+@app.get("/api/reports/soc/pdf")
+def get_soc_report_pdf_get_endpoint(
+    period: str = "last_24h",
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+) -> Response:
+    """Generate and download an aggregate SOC PDF report via GET."""
+    req = SOCReportRequest(period=period, start_time=start_time, end_time=end_time)
+    return get_soc_report_pdf_post_endpoint(req)
 
 
 # ==========================================

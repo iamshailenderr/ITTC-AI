@@ -39,8 +39,8 @@
             <button id="btnCorrelate" class="btn btn-secondary" onclick="triggerCorrelation()">
                 <span class="btn-icon">⚡</span> Run Correlation
             </button>
-            <button id="btnRefresh" class="btn btn-primary" onclick="refreshAll()">
-                <span class="btn-icon">🔄</span> Refresh
+            <button id="btnSocReport" class="btn btn-primary" onclick="openSocReportModal()">
+                <span class="btn-icon">📊</span> SOC Report
             </button>
         </div>
     </header>
@@ -514,6 +514,74 @@
                 <button class="modal-close-btn" onclick="closeAlertAnalysisModal()">&times;</button>
             </div>
             <div id="modalAlertAnalysisBody" class="modal-body">
+                <!-- Injected dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- INDIVIDUAL ALERT REPORT MODAL -->
+    <div id="alertReportModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-icon">📄</span>
+                    <h3 id="modalAlertReportTitle">Security Alert Dossier</h3>
+                </div>
+                <button class="modal-close-btn" onclick="closeAlertReportModal()">&times;</button>
+            </div>
+
+            <div class="modal-toolbar">
+                <button id="btnDownloadAlertPdf" class="btn btn-sm btn-primary" onclick="downloadCurrentAlertPDF()">
+                    💾 Download PDF Report
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="closeAlertReportModal()">
+                    Close
+                </button>
+            </div>
+
+            <div id="modalAlertReportBody" class="modal-body">
+                <!-- Injected dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- AGGREGATE SOC REPORT MODAL -->
+    <div id="socReportModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-icon">📊</span>
+                    <h3>SOC Aggregate Security Intelligence Report</h3>
+                </div>
+                <button class="modal-close-btn" onclick="closeSocReportModal()">&times;</button>
+            </div>
+
+            <div class="modal-toolbar" style="flex-wrap: wrap; align-items: center; gap: 8px;">
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Reporting Window:</label>
+                <select id="socReportPeriodSelect" class="select-input" onchange="onSocPeriodChange()" style="width: 160px;">
+                    <option value="last_24h">Last 24 Hours</option>
+                    <option value="last_7d">Last 7 Days</option>
+                    <option value="last_30d">Last 30 Days</option>
+                    <option value="custom">Custom Date Range</option>
+                </select>
+
+                <div id="socCustomDateInputs" style="display: none; align-items: center; gap: 6px;">
+                    <input type="datetime-local" id="socReportStartTime" class="text-input" style="font-size: 12px; padding: 4px 8px;">
+                    <span style="font-size: 12px; color: var(--text-muted);">&rarr;</span>
+                    <input type="datetime-local" id="socReportEndTime" class="text-input" style="font-size: 12px; padding: 4px 8px;">
+                </div>
+
+                <div style="margin-left: auto; display: flex; gap: 6px;">
+                    <button class="btn btn-sm btn-secondary" onclick="loadSocReportPreview()">
+                        🔍 Preview Summary
+                    </button>
+                    <button id="btnDownloadSocPdf" class="btn btn-sm btn-primary" onclick="downloadCurrentSocPDF()">
+                        💾 Download PDF Report
+                    </button>
+                </div>
+            </div>
+
+            <div id="modalSocReportBody" class="modal-body">
                 <!-- Injected dynamically -->
             </div>
         </div>

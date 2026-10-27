@@ -4,3 +4,4 @@ streamlit
 pydantic
 python-dotenv
 requests
+reportlab

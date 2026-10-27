@@ -128,7 +128,7 @@ async function checkWazuhStatus() {
 }
 
 function showGlobalLoading(isLoading) {
-    const btn = document.getElementById("btnRefresh");
+    const btn = document.getElementById("btnSocReport") || document.getElementById("btnRefresh");
     if (btn) {
         btn.disabled = isLoading;
         btn.style.opacity = isLoading ? "0.7" : "1";
@@ -766,10 +766,15 @@ function renderAlertsTable() {
                     <div style="font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(a.event)}</div>
                 </td>
                 <td>${ipFlow}</td>
-                <td>
-                    <button class="btn btn-sm btn-secondary" onclick="openAlertDeepAnalysis('${escapeHtml(a.alert_id)}')">
-                        ⚡ AI Analyze
-                    </button>
+                <td style="white-space: nowrap;">
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <button class="btn btn-sm btn-secondary" onclick="openAlertDeepAnalysis('${escapeHtml(a.alert_id)}')">
+                            ⚡ AI Analyze
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="openAlertReportModal('${escapeHtml(a.alert_id)}')">
+                            📄 Report
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -1701,3 +1706,448 @@ async function stageAlertResponse(alertId, action, target, reason) {
         alert("Staging response failed: " + err.message);
     }
 }
+
+// ==========================================================================
+// 12. INDIVIDUAL ALERT REPORT & DOSSIER MODAL
+// ==========================================================================
+
+let currentReportAlertId = null;
+
+async function openAlertReportModal(alertId) {
+    currentReportAlertId = alertId;
+    const modal = document.getElementById("alertReportModal");
+    const titleEl = document.getElementById("modalAlertReportTitle");
+    const bodyEl = document.getElementById("modalAlertReportBody");
+
+    if (titleEl) titleEl.textContent = `Security Alert Dossier: ${alertId}`;
+    if (bodyEl) {
+        bodyEl.innerHTML = `
+            <div class="state-loading">
+                <span class="spinner"></span> Assembling evidence, correlating telemetry, and generating structured report...
+            </div>
+        `;
+    }
+    if (modal) modal.style.display = "flex";
+
+    try {
+        const res = await fetch(`${API_BASE}/api/reports/alerts/${encodeURIComponent(alertId)}`);
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || `Failed with status ${res.status}`);
+        }
+        const data = await res.json();
+        renderAlertReportModalBody(data);
+    } catch (err) {
+        if (bodyEl) {
+            bodyEl.innerHTML = `
+                <div class="empty-state">
+                    <p style="color: var(--color-critical);">Report Generation Error: ${escapeHtml(err.message)}</p>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">Ensure backend service is running and alert ID is valid.</p>
+                    <button class="btn btn-sm btn-secondary" style="margin-top: 12px;" onclick="openAlertReportModal('${escapeHtml(alertId)}')">
+                        🔄 Retry Report Generation
+                    </button>
+                </div>
+            `;
+        }
+    }
+}
+
+function closeAlertReportModal() {
+    const modal = document.getElementById("alertReportModal");
+    if (modal) modal.style.display = "none";
+}
+
+function renderAlertReportModalBody(data) {
+    const bodyEl = document.getElementById("modalAlertReportBody");
+    if (!bodyEl) return;
+
+    const details = data.alert_details || {};
+    const sevRisk = data.severity_and_risk || {};
+    const execSum = data.executive_summary || {};
+    const impact = data.impact_assessment || {};
+    const recs = data.remediation_recommendations || [];
+    const conclusion = data.analyst_conclusion || {};
+
+    const establishedHtml = (execSum.established_facts || []).map(f => `<li>${escapeHtml(f)}</li>`).join("") || "<li>None recorded</li>";
+    const uncertaintiesHtml = (execSum.uncertainties || []).map(u => `<li>${escapeHtml(u)}</li>`).join("") || "<li>None recorded</li>";
+
+    const recsHtml = recs.map(r => `
+        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <strong style="color: #ffffff;">${escapeHtml(r.action)}</strong>
+                <span class="badge badge-high">${escapeHtml(r.priority || 'P2')}</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 2px;"><strong>Reason:</strong> ${escapeHtml(r.reason)}</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-style: italic;">Caution: ${escapeHtml(r.caution || 'None')}</div>
+        </div>
+    `).join("") || "<p style='color: var(--text-muted); font-size: 12px;'>No immediate remediation actions registered.</p>";
+
+    bodyEl.innerHTML = `
+        <div class="dossier-vitals" style="margin-bottom: 16px;">
+            <div class="vital-box">
+                <div class="vital-label">Composite Risk</div>
+                <div class="vital-val" style="color: #f87171;">${sevRisk.ittc_risk_score || 50}/100</div>
+            </div>
+            <div class="vital-box">
+                <div class="vital-label">ITTC Severity</div>
+                <div class="vital-val" style="color: #fbbf24;">${escapeHtml(sevRisk.ittc_severity || 'MEDIUM').toUpperCase()}</div>
+            </div>
+            <div class="vital-box">
+                <div class="vital-label">Confidence</div>
+                <div class="vital-val" style="color: #34d399;">${Math.round((Number(sevRisk.confidence_score) || 0.75) * 100)}%</div>
+            </div>
+            <div class="vital-box">
+                <div class="vital-label">Priority</div>
+                <div class="vital-val" style="color: #38bdf8; font-size: 14px;">${escapeHtml(sevRisk.investigation_priority || 'P2 - Triage')}</div>
+            </div>
+        </div>
+
+        <div class="section-block">
+            <div class="section-head"><h4>Executive Summary</h4></div>
+            <p style="font-size: 13px; color: var(--text-primary); line-height: 1.5; margin-bottom: 8px;">${escapeHtml(execSum.detection_overview || '')}</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; margin-top: 8px;">
+                <div style="background: var(--bg-surface-elevated); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+                    <strong style="color: #60a5fa;">Confirmed Facts:</strong>
+                    <ul style="margin: 4px 0 0 16px; padding: 0; color: var(--text-secondary);">${establishedHtml}</ul>
+                </div>
+                <div style="background: var(--bg-surface-elevated); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+                    <strong style="color: #fca5a5;">Telemetry Uncertainties:</strong>
+                    <ul style="margin: 4px 0 0 16px; padding: 0; color: var(--text-secondary);">${uncertaintiesHtml}</ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-block">
+            <div class="section-head"><h4>Telemetry &amp; Endpoint Context</h4></div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 12px;">
+                <div><span style="color: var(--text-muted);">Host:</span> <strong style="color: #ffffff;">${escapeHtml(details.host || 'N/A')}</strong></div>
+                <div><span style="color: var(--text-muted);">User:</span> <strong style="color: #ffffff;">${escapeHtml(details.user || 'SYSTEM')}</strong></div>
+                <div><span style="color: var(--text-muted);">Source IP:</span> <code class="td-mono">${escapeHtml(details.src_ip || 'N/A')}</code></div>
+                <div><span style="color: var(--text-muted);">Dest IP:</span> <code class="td-mono">${escapeHtml(details.dst_ip || 'N/A')}</code></div>
+            </div>
+            <div style="margin-top: 8px; font-size: 12px;">
+                <span style="color: var(--text-muted);">Event Description:</span>
+                <div style="background: var(--bg-surface-elevated); padding: 8px; border-radius: var(--radius-sm); color: var(--text-primary); margin-top: 4px; font-size: 12px;">
+                    ${escapeHtml(details.event_summary || '')}
+                </div>
+            </div>
+        </div>
+
+        <div class="section-block">
+            <div class="section-head"><h4>Impact &amp; Damage Assessment</h4></div>
+            <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 6px;">${escapeHtml(impact.observed_impact || '')}</p>
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; color: #fca5a5;">
+                <strong>Damage Notice:</strong> ${escapeHtml(impact.damage_disclaimer || 'Actual damage could not be established from the available evidence.')}
+            </div>
+        </div>
+
+        <div class="section-block">
+            <div class="section-head"><h4>Prioritized Remediation Actions</h4></div>
+            ${recsHtml}
+        </div>
+
+        <div class="section-block">
+            <div class="section-head"><h4>Analyst Conclusion</h4></div>
+            <p style="font-size: 12.5px; color: var(--text-primary); margin-bottom: 6px;">${escapeHtml(conclusion.overall_assessment || '')}</p>
+            <p style="font-size: 11px; color: var(--text-muted); font-style: italic;">${escapeHtml(conclusion.resolution_disclaimer || '')}</p>
+        </div>
+    `;
+}
+
+async function downloadCurrentAlertPDF() {
+    if (!currentReportAlertId) return;
+    const btn = document.getElementById("btnDownloadAlertPdf");
+    const originalText = btn ? btn.innerHTML : "💾 Download PDF Report";
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner"></span> Generating PDF...`;
+    }
+
+    try {
+        const url = `${API_BASE}/api/reports/alerts/${encodeURIComponent(currentReportAlertId)}/pdf`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        a.download = `ITTC_Alert_Report_${currentReportAlertId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+        alert("Failed to download alert PDF: " + err.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+}
+
+// ==========================================================================
+// 13. AGGREGATE SOC SECURITY REPORT MODAL
+// ==========================================================================
+
+let currentSocReportData = null;
+
+function openSocReportModal() {
+    const modal = document.getElementById("socReportModal");
+    if (modal) modal.style.display = "flex";
+
+    // Set default custom dates (last 7 days by default)
+    const startInput = document.getElementById("socReportStartTime");
+    const endInput = document.getElementById("socReportEndTime");
+    if (startInput && endInput && !startInput.value) {
+        const now = new Date();
+        const past = new Date(now.getTime() - 7 * 24 * 3600 * 1000);
+        endInput.value = now.toISOString().slice(0, 16);
+        startInput.value = past.toISOString().slice(0, 16);
+    }
+
+    loadSocReportPreview();
+}
+
+function closeSocReportModal() {
+    const modal = document.getElementById("socReportModal");
+    if (modal) modal.style.display = "none";
+}
+
+function onSocPeriodChange() {
+    const select = document.getElementById("socReportPeriodSelect");
+    const customDiv = document.getElementById("socCustomDateInputs");
+    if (select && customDiv) {
+        if (select.value === "custom") {
+            customDiv.style.display = "flex";
+        } else {
+            customDiv.style.display = "none";
+        }
+    }
+    loadSocReportPreview();
+}
+
+function getSocReportParams() {
+    const period = (document.getElementById("socReportPeriodSelect")?.value) || "last_24h";
+    let startTime = null;
+    let endTime = null;
+
+    if (period === "custom") {
+        const s = document.getElementById("socReportStartTime")?.value;
+        const e = document.getElementById("socReportEndTime")?.value;
+        if (s) startTime = new Date(s).toISOString();
+        if (e) endTime = new Date(e).toISOString();
+    }
+    return { period, startTime, endTime };
+}
+
+async function loadSocReportPreview() {
+    const bodyEl = document.getElementById("modalSocReportBody");
+    const { period, startTime, endTime } = getSocReportParams();
+
+    if (period === "custom" && (!startTime || !endTime)) {
+        if (bodyEl) {
+            bodyEl.innerHTML = `<div class="empty-state"><p style="color: var(--color-critical);">Please select both start and end dates for custom range.</p></div>`;
+        }
+        return;
+    }
+
+    if (period === "custom" && new Date(startTime) >= new Date(endTime)) {
+        if (bodyEl) {
+            bodyEl.innerHTML = `<div class="empty-state"><p style="color: var(--color-critical);">Validation Error: Start time must precede end time.</p></div>`;
+        }
+        return;
+    }
+
+    if (bodyEl) {
+        bodyEl.innerHTML = `
+            <div class="state-loading">
+                <span class="spinner"></span> Querying telemetry and calculating SOC aggregate metrics...
+            </div>
+        `;
+    }
+
+    try {
+        const payload = {
+            period: period,
+            start_time: startTime,
+            end_time: endTime,
+        };
+
+        const res = await fetch(`${API_BASE}/api/reports/soc`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || `HTTP ${res.status}`);
+        }
+
+        currentSocReportData = await res.json();
+        renderSocReportPreviewBody(currentSocReportData);
+    } catch (err) {
+        if (bodyEl) {
+            bodyEl.innerHTML = `
+                <div class="empty-state">
+                    <p style="color: var(--color-critical);">Error loading SOC report: ${escapeHtml(err.message)}</p>
+                    <button class="btn btn-sm btn-secondary" style="margin-top: 10px;" onclick="loadSocReportPreview()">
+                        🔄 Retry
+                    </button>
+                </div>
+            `;
+        }
+    }
+}
+
+function renderSocReportPreviewBody(data) {
+    const bodyEl = document.getElementById("modalSocReportBody");
+    if (!bodyEl) return;
+
+    const stats = data.security_statistics || {};
+    const sev = stats.severity_counts || {};
+    const periodDisplay = data.reporting_period?.display || "Reporting Window";
+    const findings = data.critical_high_findings || [];
+    const coverage = data.monitoring_coverage || [];
+    const recs = data.recommended_actions || [];
+
+    const findingsHtml = findings.length ? findings.slice(0, 5).map(f => `
+        <tr>
+            <td class="td-mono">${escapeHtml(f.alert_id)}</td>
+            <td style="font-size: 11px;">${formatTimestamp(f.timestamp)}</td>
+            <td><span class="badge ${getSeverityBadgeClass(f.severity)}">${escapeHtml(f.severity)}</span></td>
+            <td><strong>${escapeHtml(f.host)}</strong>: ${escapeHtml((f.event || '').slice(0, 100))}</td>
+        </tr>
+    `).join("") : `<tr><td colspan="4" style="color: var(--text-muted); text-align: center;">No critical or high events in period.</td></tr>`;
+
+    const coverageHtml = coverage.map(c => `
+        <div style="background: var(--bg-surface-elevated); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); margin-bottom: 6px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                <strong>${escapeHtml(c.source)}</strong>
+                <span class="badge ${c.records_count > 0 ? 'badge-low' : 'badge-count'}">${c.records_count} alerts</span>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${escapeHtml(c.notes)}</div>
+        </div>
+    `).join("");
+
+    const recsHtml = recs.map(r => `
+        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 6px; font-size: 12px;">
+            <div style="display:flex; justify-content:space-between;">
+                <strong style="color: #60a5fa;">${escapeHtml(r.action)}</strong>
+                <span class="badge badge-high">${escapeHtml(r.priority || 'P2')}</span>
+            </div>
+            <div style="color: var(--text-secondary); margin-top: 2px;">${escapeHtml(r.reason)}</div>
+        </div>
+    `).join("");
+
+    bodyEl.innerHTML = `
+        <div style="background: var(--bg-surface-subtle); padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); margin-bottom: 16px; font-size: 12px;">
+            <strong>Selected Scope:</strong> <span style="color: #60a5fa;">${escapeHtml(periodDisplay)}</span>
+            &bull; <strong>Report ID:</strong> <code class="td-mono">${escapeHtml(data.report_id)}</code>
+        </div>
+
+        <div class="kpi-grid" style="margin-bottom: 16px;">
+            <div class="kpi-card">
+                <div class="kpi-label">Total Alerts</div>
+                <div class="kpi-value">${stats.total_alerts || 0}</div>
+                <div class="kpi-sub">In selected period</div>
+            </div>
+            <div class="kpi-card kpi-critical">
+                <div class="kpi-label">Critical / High</div>
+                <div class="kpi-value">${(sev.critical || 0) + (sev.high || 0)}</div>
+                <div class="kpi-sub">${sev.critical || 0} Crit / ${sev.high || 0} High</div>
+            </div>
+            <div class="kpi-card kpi-incidents">
+                <div class="kpi-label">Correlated Incidents</div>
+                <div class="kpi-value">${stats.active_incidents || 0}</div>
+                <div class="kpi-sub">Multi-alert clusters</div>
+            </div>
+            <div class="kpi-card kpi-anomaly">
+                <div class="kpi-label">ML Anomalies</div>
+                <div class="kpi-value">${stats.anomalies_count || 0}</div>
+                <div class="kpi-sub">Behavioral flags</div>
+            </div>
+        </div>
+
+        <div class="section-block">
+            <div class="section-head"><h4>Executive Summary</h4></div>
+            <p style="font-size: 13px; color: var(--text-primary); line-height: 1.5;">${escapeHtml(data.executive_summary || '')}</p>
+        </div>
+
+        <div class="section-block">
+            <div class="section-head"><h4>Monitoring Coverage &amp; Telemetry Ingestion</h4></div>
+            ${coverageHtml}
+        </div>
+
+        <div class="section-block">
+            <div class="section-head"><h4>Notable Critical &amp; High Severity Events</h4></div>
+            <div class="table-responsive">
+                <table class="soc-table">
+                    <thead>
+                        <tr>
+                            <th>Alert ID</th>
+                            <th>Timestamp</th>
+                            <th>Severity</th>
+                            <th>Host &amp; Summary</th>
+                        </tr>
+                    </thead>
+                    <tbody>${findingsHtml}</tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section-block">
+            <div class="section-head"><h4>Strategic Recommendations</h4></div>
+            ${recsHtml}
+        </div>
+    `;
+}
+
+async function downloadCurrentSocPDF() {
+    const btn = document.getElementById("btnDownloadSocPdf");
+    const originalText = btn ? btn.innerHTML : "💾 Download PDF Report";
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner"></span> Building PDF...`;
+    }
+
+    const { period, startTime, endTime } = getSocReportParams();
+
+    try {
+        const payload = {
+            period: period,
+            start_time: startTime,
+            end_time: endTime,
+        };
+
+        const res = await fetch(`${API_BASE}/api/reports/soc/pdf`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || `HTTP ${res.status}`);
+        }
+
+        const blob = await res.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        const filenameSafe = period === "custom" && startTime ? `ITTC_SOC_Report_${startTime.slice(0, 10)}.pdf` : `ITTC_SOC_Report_${period}.pdf`;
+        a.download = filenameSafe;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+        alert("Failed to download SOC report PDF: " + err.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+}

@@ -208,6 +208,74 @@ class TestAPIEndpoints(unittest.TestCase):
         events = [a["event"] for a in audit_data]
         self.assertIn("RESPONSE_APPROVED", events)
 
+    def test_alert_report_json_endpoint(self):
+        res = self.client.get("/api/reports/alerts/ITTC-001")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["alert_id"], "ITTC-001")
+        self.assertIn("report_id", data)
+        self.assertIn("executive_summary", data)
+        self.assertIn("severity_and_risk", data)
+        self.assertIn("impact_assessment", data)
+
+    def test_alert_report_pdf_endpoint(self):
+        res = self.client.get("/api/reports/alerts/ITTC-001/pdf")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.headers.get("content-type"), "application/pdf")
+        self.assertIn("ITTC_Alert_Report_ITTC-001.pdf", res.headers.get("content-disposition", ""))
+        self.assertTrue(res.content.startswith(b"%PDF-"))
+        self.assertGreater(len(res.content), 1000)
+
+    def test_alert_report_not_found(self):
+        res_json = self.client.get("/api/reports/alerts/NONEXISTENT-ALERT-999")
+        self.assertEqual(res_json.status_code, 404)
+
+        res_pdf = self.client.get("/api/reports/alerts/NONEXISTENT-ALERT-999/pdf")
+        self.assertEqual(res_pdf.status_code, 404)
+
+    def test_soc_report_json_endpoint(self):
+        res = self.client.post("/api/reports/soc", json={"period": "last_24h"})
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertIn("report_id", data)
+        self.assertIn("security_statistics", data)
+        self.assertIn("monitoring_coverage", data)
+
+    def test_soc_report_pdf_post_endpoint(self):
+        res = self.client.post("/api/reports/soc/pdf", json={"period": "last_24h"})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.headers.get("content-type"), "application/pdf")
+        self.assertIn("ITTC_SOC_Report_", res.headers.get("content-disposition", ""))
+        self.assertTrue(res.content.startswith(b"%PDF-"))
+
+    def test_soc_report_pdf_get_endpoint(self):
+        res = self.client.get("/api/reports/soc/pdf?period=last_7d")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.headers.get("content-type"), "application/pdf")
+        self.assertTrue(res.content.startswith(b"%PDF-"))
+
+    def test_soc_report_custom_range_valid(self):
+        payload = {
+            "period": "custom",
+            "start_time": "2026-08-01T00:00:00Z",
+            "end_time": "2026-08-31T23:59:59Z",
+        }
+        res = self.client.post("/api/reports/soc/pdf", json=payload)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.headers.get("content-type"), "application/pdf")
+        self.assertTrue(res.content.startswith(b"%PDF-"))
+
+    def test_soc_report_invalid_range_400(self):
+        # start >= end returns 400
+        payload = {
+            "period": "custom",
+            "start_time": "2026-08-31T00:00:00Z",
+            "end_time": "2026-08-01T00:00:00Z",
+        }
+        res = self.client.post("/api/reports/soc", json=payload)
+        self.assertEqual(res.status_code, 400)
+
 
 if __name__ == "__main__":
     unittest.main()
+
