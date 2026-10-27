@@ -1,8 +1,6 @@
-"""Focused offline tests for the VirusTotal provider.
+"""Focused offline tests for the VirusTotal provider."""
 
-No real VirusTotal requests are made by these tests.
-"""
-
+import base64
 import unittest
 from unittest.mock import Mock, patch
 
@@ -21,24 +19,7 @@ class VirusTotalProviderTests(unittest.TestCase):
         return response
 
     def _payload(self):
-        return {
-            "data": {
-                "attributes": {
-                    "last_analysis_stats": {
-                        "malicious": 8,
-                        "suspicious": 2,
-                        "harmless": 55,
-                        "undetected": 5,
-                    },
-                    "reputation": -15,
-                    "categories": {"a": "malware", "b": "c2"},
-                    "last_analysis_date": 1790000000,
-                    "popular_threat_classification": {
-                        "popular_threat_name": [{"value": "ExampleMalware"}]
-                    },
-                }
-            }
-        }
+        return {"data": {"attributes": {"last_analysis_stats": {"malicious": 8, "suspicious": 2, "harmless": 55, "undetected": 5}, "reputation": -15, "categories": {"a": "malware", "b": "c2"}, "last_analysis_date": 1790000000, "popular_threat_classification": {"popular_threat_name": [{"value": "ExampleMalware"}]}}}}
 
     @patch("backend.threat_intel.virustotal_provider._requests.get")
     def test_ip_lookup(self, get):
@@ -57,13 +38,14 @@ class VirusTotalProviderTests(unittest.TestCase):
     @patch("backend.threat_intel.virustotal_provider._requests.get")
     def test_domain_url_and_hash_endpoints(self, get):
         get.return_value = self._response(self._payload())
-        for ioc_type, expected in [
-            ("domain", "/domains/example.test"),
-            ("url", "/urls/https://example.test/a"),
-            ("sha256", "/files/aabbcc"),
-        ]:
+        cases = [
+            ("domain", "example.test", "/domains/example.test"),
+            ("url", "https://example.test/a", "/urls/" + base64.urlsafe_b64encode(b"https://example.test/a").decode().rstrip("=")),
+            ("sha256", "aabbcc", "/files/aabbcc"),
+        ]
+        for ioc_type, value, expected in cases:
             with self.subTest(ioc_type=ioc_type):
-                self.provider.enrich(ioc_type, "https://example.test/a" if ioc_type == "url" else "example.test" if ioc_type == "domain" else "aabbcc")
+                self.provider.enrich(ioc_type, value)
                 self.assertTrue(get.call_args.args[0].endswith(expected))
 
     @patch("backend.threat_intel.virustotal_provider._requests.get")
