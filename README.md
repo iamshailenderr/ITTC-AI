@@ -1,4 +1,4 @@
-# ITTC-AI — Autonomous AI-Driven SOC Copilot
+# ITTC-AI — Intelligent Threat Triage Copilot
 
 **ITTC-AI** is an intelligent Security Operations Center (SOC) Copilot designed to ingest multi-source telemetry (Wazuh endpoint logs and Suricata network IDS alerts), correlate events into incidents, perform semantic RAG-grounded AI investigations using local LLMs (Qwen3), compute explainable risk scores, and manage an approval-gated Active Response containment lifecycle with automated safeguards and immutable audit logging.
 
