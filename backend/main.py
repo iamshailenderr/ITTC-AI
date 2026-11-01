@@ -32,6 +32,7 @@ from backend.models.incident import (
     IncidentNoteRequest,
     CopilotRequest,
     CopilotResponse,
+    CorrelationResult,
 )
 from backend.services.alerts import get_alerts, get_alert
 from backend.sources.wazuh_indexer import (
@@ -46,7 +47,11 @@ from backend.services.incidents import (
     correlate_alerts,
     update_incident_status,
     add_incident_note,
+    run_full_correlation_pipeline,
+    get_latest_correlation_run,
+    get_correlation_run,
 )
+from backend.services.pdf_generator import build_correlation_report_pdf
 from backend.services.ioc_investigator import investigate_ioc, IOCInvestigation
 from backend.services.active_response import (
     propose_response,
@@ -59,6 +64,7 @@ from backend.services.active_response import (
     check_wazuh_manager_status,
 )
 from backend.ai.copilot import copilot_chat
+from backend.services.notifications import generate_daily_summary_and_notify
 from backend.services.reporting import (
     generate_incident_report,
     generate_alert_report_data,
@@ -229,15 +235,112 @@ def read_incident(incident_id: str) -> Incident:
 
 
 @app.post("/api/incidents/correlate", response_model=List[Incident])
-def trigger_correlation() -> List[Incident]:
-    """Trigger alert correlation and return resulting incidents."""
+def trigger_correlation(response: Response = None) -> List[Incident]:
+    """
+    Trigger alert correlation across the current alert set, run Daily SOC Summary
+    demo notification workflow, and return resulting incidents to the dashboard.
+    Sets X-Correlation-Run-ID header with the generated correlation run ID when response is provided.
+    """
     try:
-        return correlate_alerts()
+        corr_result = run_full_correlation_pipeline()
+        incidents = list_incidents()
+        if not incidents:
+            incidents = correlate_alerts()
+        if response is not None:
+            response.headers["X-Correlation-Run-ID"] = corr_result.correlation_run_id
     except (WazuhIndexerConnectionError, WazuhIndexerAuthError) as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Wazuh Indexer unavailable: {str(e)}",
         )
+
+    # Demo Trigger: Generate Daily SOC Summary PDF and dispatch exactly ONE email to n8n
+    try:
+        generate_daily_summary_and_notify(incidents)
+    except Exception:
+        # Notification failure must never break correlation or dashboard display
+        pass
+
+    return incidents
+
+
+@app.post("/api/correlation/run", response_model=CorrelationResult)
+def run_correlation_endpoint() -> CorrelationResult:
+    """Trigger the full multi-alert Run Correlation pipeline and return the structured result."""
+    try:
+        return run_full_correlation_pipeline()
+    except (WazuhIndexerConnectionError, WazuhIndexerAuthError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Wazuh Indexer unavailable: {str(e)}",
+        )
+
+
+@app.get("/api/correlation/latest", response_model=CorrelationResult)
+def get_latest_correlation() -> CorrelationResult:
+    """Return the structured findings of the latest correlation run."""
+    result = get_latest_correlation_run()
+    if result is None:
+        result = run_full_correlation_pipeline()
+    return result
+
+
+@app.get("/api/correlation/{run_id}", response_model=CorrelationResult)
+def get_correlation_by_id(run_id: str) -> CorrelationResult:
+    """Return a specific correlation result by run_id."""
+    result = get_correlation_run(run_id)
+    if result is None:
+        latest = get_latest_correlation_run()
+        if latest and latest.correlation_run_id == run_id:
+            result = latest
+        else:
+            raise HTTPException(status_code=404, detail=f"Correlation run '{run_id}' not found")
+    return result
+
+
+@app.get("/api/correlation/{run_id}/report")
+def download_correlation_report_pdf(run_id: str) -> Response:
+    """Generate and download the PDF report for a specific correlation run."""
+    result = get_correlation_run(run_id)
+    if result is None:
+        latest = get_latest_correlation_run()
+        if latest and (latest.correlation_run_id == run_id or run_id.lower() == "latest"):
+            result = latest
+        else:
+            raise HTTPException(status_code=404, detail=f"Correlation run '{run_id}' not found")
+
+    try:
+        pdf_bytes = build_correlation_report_pdf(result.model_dump())
+        filename = f"ITTC_Correlation_Report_{result.correlation_run_id}.pdf"
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate correlation report PDF: {str(e)}")
+
+
+@app.post("/api/notifications/daily-summary")
+def trigger_daily_summary_notification() -> dict:
+    """Production 24-hour trigger endpoint for scheduled Daily SOC Summary."""
+    result = generate_daily_summary_and_notify()
+    return result.model_dump()
+
+
+@app.get("/api/reports/daily-summary/pdf")
+def download_daily_summary_pdf() -> Response:
+    """Download the current Daily SOC Summary PDF report."""
+    try:
+        from backend.services.reporting import generate_daily_summary_pdf
+        pdf_bytes = generate_daily_summary_pdf()
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": 'attachment; filename="ITTC_AI_Daily_SOC_Summary.pdf"'},
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate daily summary PDF: {str(e)}")
 
 
 @app.patch("/api/incidents/{incident_id}/status", response_model=Incident)

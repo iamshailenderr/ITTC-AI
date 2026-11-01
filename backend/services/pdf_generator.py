@@ -1298,3 +1298,608 @@ def build_soc_pdf(report: Dict[str, Any]) -> bytes:
     # Build document
     doc.build(story, canvasmaker=NumberedCanvas)
     return buf.getvalue()
+
+
+# ==============================================================================
+# 8. FEATURE THREE: AGGREGATED DAILY SOC SUMMARY REPORT BUILDER
+# ==============================================================================
+
+def build_daily_summary_pdf(report: Dict[str, Any]) -> bytes:
+    """
+    Build a multi-page, executive-ready PDF for the Aggregated Daily SOC Summary Report.
+    Summarizes all correlated incidents generated or active within the 24-hour cycle.
+    """
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=letter,
+        leftMargin=36,
+        rightMargin=36,
+        topMargin=48,
+        bottomMargin=48,
+    )
+
+    styles = get_report_styles()
+    story: List[Any] = []
+
+    # 1. Header Banner
+    period_str = report.get("reporting_period", {}).get("display", "24-Hour Monitoring Interval")
+    meta = [
+        f"<b>Report ID:</b> {sanitize_text(report.get('report_id', 'N/A'))}",
+        f"<b>Generated:</b> {sanitize_text(report.get('generated_at', ''))[:19].replace('T', ' ')} UTC",
+        "<b>Classification:</b> TLP:AMBER | SOC DAILY SUMMARY",
+    ]
+    banner = create_banner(
+        title="DAILY SOC INCIDENT & THREAT SUMMARY",
+        subtitle=f"Monitoring Window: {period_str}",
+        meta_lines=meta,
+        styles=styles,
+    )
+    story.append(banner)
+    story.append(Spacer(1, 10))
+
+    # 2. Key Metrics Bar
+    stats = report.get("statistics", {})
+    sev_counts = stats.get("severity_counts", {})
+    total_alerts = stats.get("total_alerts", 0)
+    total_incidents = stats.get("total_incidents", 0)
+    peak_risk = stats.get("peak_risk", 0)
+    distinct_hosts = stats.get("distinct_hosts_count", 0)
+
+    stats_bar = [
+        [
+            Paragraph("<b>Total Correlated Incidents:</b>", styles["TableCellBold"]),
+            Paragraph(f"<b>{total_incidents}</b>", styles["TableCellBold"]),
+            Paragraph("<b>Total Processed Alerts:</b>", styles["TableCellBold"]),
+            Paragraph(f"<b>{total_alerts}</b>", styles["TableCellBold"]),
+        ],
+        [
+            Paragraph("<b>Critical Severity Incidents:</b>", styles["TableCellBold"]),
+            Paragraph(f"<b>{sev_counts.get('critical', 0)}</b>", styles["TableCellBold"]),
+            Paragraph("<b>High Severity Incidents:</b>", styles["TableCellBold"]),
+            Paragraph(f"<b>{sev_counts.get('high', 0)}</b>", styles["TableCellBold"]),
+        ],
+        [
+            Paragraph("<b>Medium Severity Incidents:</b>", styles["TableCellBold"]),
+            Paragraph(f"<b>{sev_counts.get('medium', 0)}</b>", styles["TableCellBold"]),
+            Paragraph("<b>Low Severity Incidents:</b>", styles["TableCellBold"]),
+            Paragraph(f"<b>{sev_counts.get('low', 0)}</b>", styles["TableCellBold"]),
+        ],
+        [
+            Paragraph("<b>Peak Incident Risk Score:</b>", styles["TableCellBold"]),
+            Paragraph(f"<b>{peak_risk}/100</b>", styles["TableCellBold"]),
+            Paragraph("<b>Distinct Affected Hosts:</b>", styles["TableCellBold"]),
+            Paragraph(f"<b>{distinct_hosts}</b>", styles["TableCellBold"]),
+        ],
+    ]
+    t_stats = Table(stats_bar, colWidths=[140, 130, 140, 130])
+    t_stats.setStyle(
+        TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), COLOR_BG_CARD),
+            ("BOX", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+            ("INNERGRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER_LIGHT),
+            ("TOPPADDING", (0, 0), (-1, -1), 3),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+            ("LEFTPADDING", (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ])
+    )
+    story.append(t_stats)
+    story.append(Spacer(1, 10))
+
+    # 3. Section A: Executive Risk Summary
+    story.extend(create_section_header("A. 24-HOUR EXECUTIVE RISK SUMMARY", styles))
+    exec_summary = report.get("overall_risk_summary", "")
+    story.append(create_callout_box(exec_summary, styles, bg_color=HexColor("#f8fafc"), border_color=COLOR_BORDER))
+    story.append(Spacer(1, 10))
+
+    # 4. Section B: Incident Register & Detailed Dossiers
+    story.extend(create_section_header("B. CORRELATED INCIDENT DOSSIERS & RESPONSE ACTIONS", styles))
+    incidents = report.get("incidents", [])
+    if incidents:
+        table_rows = [
+            [
+                Paragraph("<b>Incident ID</b>", styles["TableHeader"]),
+                Paragraph("<b>Severity</b>", styles["TableHeader"]),
+                Paragraph("<b>Risk</b>", styles["TableHeader"]),
+                Paragraph("<b>Confidence</b>", styles["TableHeader"]),
+                Paragraph("<b>Affected Hosts</b>", styles["TableHeader"]),
+                Paragraph("<b>Recommended Response</b>", styles["TableHeader"]),
+            ]
+        ]
+        for inc in incidents:
+            s_bg, s_fg = get_severity_badge_style(inc.get("severity", "LOW"))
+            table_rows.append([
+                Paragraph(sanitize_text(inc.get("incident_id", "")), styles["TableCellMono"]),
+                Paragraph(f"<font color='{s_fg.hexval()}'><b>{sanitize_text(inc.get('severity', '').upper())}</b></font>", styles["TableCell"]),
+                Paragraph(f"{inc.get('risk_score', 0)}/100", styles["TableCellBold"]),
+                Paragraph(f"{int(float(inc.get('confidence', 0.0)) * 100)}%", styles["TableCell"]),
+                Paragraph(sanitize_text(", ".join(inc.get("affected_hosts", [])) or "N/A"), styles["TableCell"]),
+                Paragraph(sanitize_text(inc.get("recommended_action", "Analyst review")), styles["TableCell"]),
+            ])
+        t_inc = Table(table_rows, colWidths=[80, 65, 55, 60, 110, 170], repeatRows=1)
+        t_inc.setStyle(
+            TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), COLOR_SECONDARY_NAVY),
+                ("BOX", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+                ("INNERGRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER_LIGHT),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [COLOR_TEXT_LIGHT, COLOR_BG_ZEBRA]),
+                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ])
+        )
+        story.append(t_inc)
+        story.append(Spacer(1, 12))
+
+        for i, inc in enumerate(incidents, 1):
+            s_bg, s_fg = get_severity_badge_style(inc.get("severity", "LOW"))
+            badge_text = inc.get("severity", "").upper()
+
+            card_hdr = [
+                [
+                    Paragraph(f"<b>Incident #{i}: {sanitize_text(inc.get('incident_id', ''))}</b>", styles["TableCellBold"]),
+                    Paragraph(f"<font color='{s_fg.hexval()}'><b>[ {badge_text} ]</b></font>", styles["TableCell"]),
+                    Paragraph(f"<b>Risk:</b> {inc.get('risk_score', 0)}/100", styles["TableCellBold"]),
+                    Paragraph(f"<b>Confidence:</b> {int(float(inc.get('confidence', 0.0)) * 100)}%", styles["TableCell"]),
+                ]
+            ]
+            t_hdr = Table(card_hdr, colWidths=[180, 120, 120, 120])
+            t_hdr.setStyle(
+                TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, -1), COLOR_SECONDARY_NAVY),
+                    ("TEXTCOLOR", (0, 0), (-1, -1), COLOR_TEXT_LIGHT),
+                    ("TOPPADDING", (0, 0), (-1, -1), 3),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                ])
+            )
+
+            approval_str = "YES — Pre-execution approval required" if inc.get("requires_approval", True) else "NO — Automated action permitted"
+            iocs_str = ", ".join(inc.get("iocs", [])) or "None identified"
+            mitre_str = ", ".join(inc.get("mitre_techniques", [])) or "None identified"
+            hosts_str = ", ".join(inc.get("affected_hosts", [])) or "N/A"
+
+            card_body = [
+                [
+                    Paragraph("<b>Affected Host(s):</b>", styles["TableCellBold"]),
+                    Paragraph(sanitize_text(hosts_str), styles["TableCell"]),
+                ],
+                [
+                    Paragraph("<b>Associated IOCs:</b>", styles["TableCellBold"]),
+                    Paragraph(sanitize_text(iocs_str), styles["TableCellMono"]),
+                ],
+                [
+                    Paragraph("<b>MITRE ATT&CK:</b>", styles["TableCellBold"]),
+                    Paragraph(sanitize_text(mitre_str), styles["TableCellMono"]),
+                ],
+                [
+                    Paragraph("<b>Executive Summary:</b>", styles["TableCellBold"]),
+                    Paragraph(sanitize_text(inc.get("summary", "")), styles["TableCell"]),
+                ],
+                [
+                    Paragraph("<b>Response Recommendation:</b>", styles["TableCellBold"]),
+                    Paragraph(sanitize_text(inc.get("recommended_action", "")), styles["TableCellBold"]),
+                ],
+                [
+                    Paragraph("<b>Approval Status:</b>", styles["TableCellBold"]),
+                    Paragraph(sanitize_text(approval_str), styles["TableCellBold"]),
+                ],
+            ]
+            t_body = Table(card_body, colWidths=[140, 400])
+            t_body.setStyle(
+                TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, -1), COLOR_BG_CARD),
+                    ("BOX", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+                    ("INNERGRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER_LIGHT),
+                    ("TOPPADDING", (0, 0), (-1, -1), 2.5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 2.5),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ])
+            )
+
+            story.append(t_hdr)
+            story.append(t_body)
+            story.append(Spacer(1, 8))
+    else:
+        story.append(Paragraph("Zero incidents were recorded during this 24-hour monitoring period.", styles["Body"]))
+        story.append(Spacer(1, 10))
+
+    # 5. Section C: Strategic Observations & Recommendations
+    story.extend(create_section_header("C. STRATEGIC OBSERVATIONS & SOC RECOMMENDATIONS", styles))
+    recs = report.get("overall_recommendations", [])
+    if recs:
+        rec_rows = [
+            [
+                Paragraph("<b>#</b>", styles["TableHeader"]),
+                Paragraph("<b>Recommended Containment & Hardening Measure</b>", styles["TableHeader"]),
+            ]
+        ]
+        for idx, r in enumerate(recs, 1):
+            rec_rows.append([
+                Paragraph(str(idx), styles["TableCellBold"]),
+                Paragraph(sanitize_text(r), styles["TableCell"]),
+            ])
+        t_recs = Table(rec_rows, colWidths=[30, 510])
+        t_recs.setStyle(
+            TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), COLOR_SECONDARY_NAVY),
+                ("BOX", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+                ("INNERGRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER_LIGHT),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [COLOR_TEXT_LIGHT, COLOR_BG_ZEBRA]),
+                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ])
+        )
+        story.append(t_recs)
+    else:
+        story.append(Paragraph("No strategic action items pending at this time.", styles["Body"]))
+
+    doc.build(story, canvasmaker=NumberedCanvas)
+    return buf.getvalue()
+
+
+# ==============================================================================
+# 9. FEATURE FOUR: RUN CORRELATION INVESTIGATION REPORT BUILDER
+# ==============================================================================
+
+def build_correlation_report_pdf(correlation_result: Dict[str, Any]) -> bytes:
+    """
+    Build a publication-quality PDF report for a Run Correlation execution.
+    Summarizes all analyzed alerts, correlation groups, extracted IOCs,
+    VirusTotal threat intelligence, RAG findings, and Qwen3 correlated security assessment.
+    """
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=letter,
+        leftMargin=36,
+        rightMargin=36,
+        topMargin=48,
+        bottomMargin=48,
+    )
+
+    styles = get_report_styles()
+    story: List[Any] = []
+
+    run_id = correlation_result.get("correlation_run_id", "N/A")
+    raw_ts = correlation_result.get("timestamp", "")
+    ts_str = str(raw_ts)[:19].replace("T", " ") + " UTC"
+    status = str(correlation_result.get("status", "correlated")).lower()
+    is_no_relation = status == "no_relation"
+
+    classification_str = "TLP:AMBER | RUN CORRELATION REPORT"
+    status_display = "INDEPENDENT EVENTS (NO RELATION)" if is_no_relation else "CORRELATED THREATS IDENTIFIED"
+    meta = [
+        f"<b>Correlation Run ID:</b> {sanitize_text(run_id)}",
+        f"<b>Analysis Timestamp:</b> {sanitize_text(ts_str)}",
+        f"<b>Status:</b> {sanitize_text(status_display)}",
+        f"<b>Classification:</b> {classification_str}",
+    ]
+    banner = create_banner(
+        title="ITTC-AI CORRELATION INVESTIGATION REPORT",
+        subtitle="Automated Multi-Source Event & IOC Correlation Analysis",
+        meta_lines=meta,
+        styles=styles,
+    )
+    story.append(banner)
+    story.append(Spacer(1, 10))
+
+    total_alerts = correlation_result.get("alerts_analyzed", 0)
+    related_groups = correlation_result.get("related_groups", [])
+    total_groups = len(related_groups)
+    iocs = correlation_result.get("iocs", [])
+    total_iocs = len(iocs)
+    risk_score = correlation_result.get("risk", 50)
+    severity_val = str(correlation_result.get("severity", "MEDIUM")).upper()
+
+    s_bg, s_fg = get_severity_badge_style(severity_val)
+
+    stats_bar = [
+        [
+            Paragraph("<b>Alerts Analyzed:</b>", styles["TableCellBold"]),
+            Paragraph(f"<b>{total_alerts}</b>", styles["TableCellBold"]),
+            Paragraph("<b>Correlated Groups:</b>", styles["TableCellBold"]),
+            Paragraph(f"<b>{total_groups}</b>", styles["TableCellBold"]),
+        ],
+        [
+            Paragraph("<b>Extracted IOCs:</b>", styles["TableCellBold"]),
+            Paragraph(f"<b>{total_iocs}</b>", styles["TableCellBold"]),
+            Paragraph("<b>Correlation Status:</b>", styles["TableCellBold"]),
+            Paragraph(f"<b>{sanitize_text(status_display)}</b>", styles["TableCellBold"]),
+        ],
+        [
+            Paragraph("<b>Correlated Risk Score:</b>", styles["TableCellBold"]),
+            Paragraph(f"<b>{risk_score}/100</b>", styles["TableCellBold"]),
+            Paragraph("<b>Lead Severity:</b>", styles["TableCellBold"]),
+            Paragraph(f"<font color='{s_fg.hexval()}'><b>{severity_val}</b></font>", styles["TableCellBold"]),
+        ],
+    ]
+    t_stats = Table(stats_bar, colWidths=[140, 130, 140, 130])
+    t_stats.setStyle(
+        TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), COLOR_BG_CARD),
+            ("BOX", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+            ("INNERGRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER_LIGHT),
+            ("TOPPADDING", (0, 0), (-1, -1), 3),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+            ("LEFTPADDING", (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ])
+    )
+    story.append(t_stats)
+    story.append(Spacer(1, 10))
+
+    story.extend(create_section_header("A. EXECUTIVE CORRELATION SUMMARY & REASONING", styles))
+    qwen = correlation_result.get("qwen_analysis") or {}
+    exec_summary = qwen.get("summary") or correlation_result.get("message", "Correlation analysis complete.")
+    story.append(create_callout_box(exec_summary, styles, bg_color=HexColor("#f8fafc"), border_color=COLOR_BORDER))
+    story.append(Spacer(1, 6))
+
+    reasoning_text = correlation_result.get("correlation_reasoning") or qwen.get("correlation_reasoning") or ""
+    if reasoning_text:
+        reasoning_html = f"<b>Correlation Methodology & Relationship Reasoning:</b><br/>{sanitize_text(reasoning_text)}"
+        story.append(create_callout_box(reasoning_html, styles, bg_color=HexColor("#f1f5f9"), border_color=COLOR_BORDER_LIGHT))
+        story.append(Spacer(1, 10))
+
+    story.extend(create_section_header("B. CORRELATED INCIDENT CLUSTERS & RELATIONSHIPS", styles))
+    if related_groups:
+        for grp in related_groups:
+            grp_id = grp.get("group_id", "GROUP-1")
+            lead_sev = str(grp.get("lead_severity", "MEDIUM")).upper()
+            grp_risk = grp.get("lead_risk_score", 50)
+            hosts_str = ", ".join(grp.get("hosts", [])) or "N/A"
+            users_str = ", ".join(grp.get("users", [])) or "N/A"
+            rel_types = ", ".join(grp.get("relationship_types", [])) or "Temporal & Contextual"
+            grp_reasoning = grp.get("reasoning", "")
+            alert_ids = grp.get("alert_ids", [])
+
+            card_hdr = [
+                [
+                    Paragraph(f"<b>Group ID: {sanitize_text(grp_id)}</b>", styles["TableHeader"]),
+                    Paragraph(f"<b>Severity: {lead_sev} | Risk: {grp_risk}/100</b>", styles["TableHeader"]),
+                ]
+            ]
+            t_hdr = Table(card_hdr, colWidths=[270, 270])
+            t_hdr.setStyle(
+                TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, -1), COLOR_SECONDARY_NAVY),
+                    ("BOX", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+                    ("TOPPADDING", (0, 0), (-1, -1), 3),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                ])
+            )
+
+            card_body = [
+                [
+                    Paragraph("<b>Affected Hosts:</b>", styles["TableCellBold"]),
+                    Paragraph(sanitize_text(hosts_str), styles["TableCell"]),
+                ],
+                [
+                    Paragraph("<b>Observed Users:</b>", styles["TableCellBold"]),
+                    Paragraph(sanitize_text(users_str), styles["TableCell"]),
+                ],
+                [
+                    Paragraph("<b>Relationship Types:</b>", styles["TableCellBold"]),
+                    Paragraph(sanitize_text(rel_types), styles["TableCellBold"]),
+                ],
+                [
+                    Paragraph("<b>Correlation Basis:</b>", styles["TableCellBold"]),
+                    Paragraph(sanitize_text(grp_reasoning), styles["TableCell"]),
+                ],
+                [
+                    Paragraph("<b>Correlated Alerts:</b>", styles["TableCellBold"]),
+                    Paragraph(sanitize_text(", ".join(alert_ids)), styles["TableCellMono"]),
+                ],
+            ]
+
+            alert_details = grp.get("alert_details", [])
+            if alert_details:
+                detail_rows = []
+                for a in alert_details:
+                    aid = a.get("alert_id", "")
+                    asev = str(a.get("severity", "")).upper()
+                    ahost = a.get("host", "")
+                    aev = a.get("event", "")[:120]
+                    detail_rows.append(f"• <b>[{aid}]</b> ({asev} on {ahost}): {aev}")
+                card_body.append([
+                    Paragraph("<b>Alert Details:</b>", styles["TableCellBold"]),
+                    Paragraph("<br/>".join(sanitize_text(r) for r in detail_rows), styles["TableCell"]),
+                ])
+
+            t_body = Table(card_body, colWidths=[140, 400])
+            t_body.setStyle(
+                TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, -1), COLOR_BG_CARD),
+                    ("BOX", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+                    ("INNERGRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER_LIGHT),
+                    ("TOPPADDING", (0, 0), (-1, -1), 2.5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 2.5),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ])
+            )
+            story.append(t_hdr)
+            story.append(t_body)
+            story.append(Spacer(1, 8))
+    else:
+        no_rel_box = (
+            "<b>No related alerts found.</b><br/>"
+            "All analyzed alerts appear to be independent events based on IOC, temporal window, "
+            "host context, and security relationship evaluation. No shared lateral movement, command-and-control "
+            "channels, or coordinated multi-stage adversary campaigns were observed across the current alert set."
+        )
+        story.append(create_callout_box(no_rel_box, styles, bg_color=HexColor("#eff6ff"), border_color=COLOR_BORDER))
+        story.append(Spacer(1, 10))
+
+    story.extend(create_section_header("C. EXTRACTED IOCS & VIRUSTOTAL THREAT INTELLIGENCE", styles))
+    ti_list = correlation_result.get("threat_intelligence", [])
+    if ti_list:
+        ti_rows = [
+            [
+                Paragraph("<b>Indicator (IOC)</b>", styles["TableHeader"]),
+                Paragraph("<b>Type</b>", styles["TableHeader"]),
+                Paragraph("<b>Reputation</b>", styles["TableHeader"]),
+                Paragraph("<b>Detections</b>", styles["TableHeader"]),
+                Paragraph("<b>Provider Status</b>", styles["TableHeader"]),
+                Paragraph("<b>Source</b>", styles["TableHeader"]),
+            ]
+        ]
+        for ti in ti_list:
+            ioc_val = ti.get("ioc", "")
+            ioc_type = ti.get("ioc_type", "").upper()
+            rep = ti.get("reputation", "unknown").upper()
+            det_count = ti.get("malicious_count")
+            tot_eng = ti.get("total_engines")
+            det_str = f"{det_count}/{tot_eng}" if det_count is not None and tot_eng is not None else "N/A"
+            prov_status = ti.get("provider_status", "available")
+            source_str = ti.get("source", "VirusTotal")
+            rep_color = "#991b1b" if rep == "MALICIOUS" else ("#92400e" if rep == "SUSPICIOUS" else "#475569")
+
+            ti_rows.append([
+                Paragraph(sanitize_text(ioc_val), styles["TableCellMono"]),
+                Paragraph(sanitize_text(ioc_type), styles["TableCellBold"]),
+                Paragraph(f"<font color='{rep_color}'><b>{sanitize_text(rep)}</b></font>", styles["TableCell"]),
+                Paragraph(sanitize_text(det_str), styles["TableCell"]),
+                Paragraph(sanitize_text(prov_status), styles["TableCell"]),
+                Paragraph(sanitize_text(source_str), styles["TableCell"]),
+            ])
+        t_ti = Table(ti_rows, colWidths=[160, 60, 80, 75, 85, 80], repeatRows=1)
+        t_ti.setStyle(
+            TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), COLOR_SECONDARY_NAVY),
+                ("BOX", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+                ("INNERGRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER_LIGHT),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [COLOR_TEXT_LIGHT, COLOR_BG_ZEBRA]),
+                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ("LEFTPADDING", (0, 0), (-1, -1), 4),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+            ])
+        )
+        story.append(t_ti)
+        story.append(Spacer(1, 10))
+    elif iocs:
+        ioc_rows = [
+            [
+                Paragraph("<b>Indicator (IOC)</b>", styles["TableHeader"]),
+                Paragraph("<b>Type</b>", styles["TableHeader"]),
+                Paragraph("<b>Threat Intelligence Status</b>", styles["TableHeader"]),
+            ]
+        ]
+        for ioc in iocs:
+            ioc_rows.append([
+                Paragraph(sanitize_text(ioc.get("value", "")), styles["TableCellMono"]),
+                Paragraph(sanitize_text(str(ioc.get("type", "")).upper()), styles["TableCellBold"]),
+                Paragraph("VirusTotal lookup completed (unrated / offline fallback)", styles["TableCell"]),
+            ])
+        t_iocs = Table(ioc_rows, colWidths=[240, 100, 200], repeatRows=1)
+        t_iocs.setStyle(
+            TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), COLOR_SECONDARY_NAVY),
+                ("BOX", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+                ("INNERGRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER_LIGHT),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [COLOR_TEXT_LIGHT, COLOR_BG_ZEBRA]),
+                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ("LEFTPADDING", (0, 0), (-1, -1), 4),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+            ])
+        )
+        story.append(t_iocs)
+        story.append(Spacer(1, 10))
+    else:
+        story.append(Paragraph("No external indicators of compromise (IOCs) detected across analyzed alerts.", styles["Body"]))
+        story.append(Spacer(1, 10))
+
+    story.extend(create_section_header("D. RAG INVESTIGATION FINDINGS & MITRE ATT&CK CONTEXT", styles))
+    rag_findings = correlation_result.get("rag_findings", [])
+    if rag_findings:
+        rag_rows = [
+            [
+                Paragraph("<b>Topic / Technique</b>", styles["TableHeader"]),
+                Paragraph("<b>Category</b>", styles["TableHeader"]),
+                Paragraph("<b>Similarity</b>", styles["TableHeader"]),
+                Paragraph("<b>Knowledge Base Context & Playbook Guidance</b>", styles["TableHeader"]),
+            ]
+        ]
+        for rf in rag_findings:
+            title_str = rf.get("title") or rf.get("topic") or "Security Playbook"
+            cat_str = rf.get("category", "MITRE ATT&CK")
+            score_str = f"{rf.get('similarity_score', 0.0):.2f}"
+            text_str = rf.get("text", "")[:280]
+            rag_rows.append([
+                Paragraph(sanitize_text(title_str), styles["TableCellBold"]),
+                Paragraph(sanitize_text(cat_str), styles["TableCell"]),
+                Paragraph(sanitize_text(score_str), styles["TableCell"]),
+                Paragraph(sanitize_text(text_str), styles["TableCell"]),
+            ])
+        t_rag = Table(rag_rows, colWidths=[130, 80, 50, 280], repeatRows=1)
+        t_rag.setStyle(
+            TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), COLOR_SECONDARY_NAVY),
+                ("BOX", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+                ("INNERGRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER_LIGHT),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [COLOR_TEXT_LIGHT, COLOR_BG_ZEBRA]),
+                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ("LEFTPADDING", (0, 0), (-1, -1), 4),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+            ])
+        )
+        story.append(t_rag)
+        story.append(Spacer(1, 10))
+    else:
+        story.append(Paragraph("Standard RAG baseline referenced; no specialized MITRE playbook overrides triggered.", styles["Body"]))
+        story.append(Spacer(1, 10))
+
+    story.extend(create_section_header("E. QWEN3 CORRELATED ANALYSIS & DEFENSIVE RECOMMENDATIONS", styles))
+    evidence_list = qwen.get("evidence") or correlation_result.get("evidence", [])
+    if evidence_list:
+        story.append(Paragraph("<b>Observed Correlated Evidence:</b>", styles["TableCellBold"]))
+        for ev in evidence_list[:6]:
+            story.append(Paragraph(f"• {sanitize_text(ev)}", styles["Body"]))
+        story.append(Spacer(1, 6))
+
+    recs = qwen.get("recommendations", [])
+    if recs:
+        rec_rows = [
+            [
+                Paragraph("<b>#</b>", styles["TableHeader"]),
+                Paragraph("<b>Recommended SOC Incident Containment & Hardening Action</b>", styles["TableHeader"]),
+            ]
+        ]
+        for idx, r in enumerate(recs, 1):
+            rec_rows.append([
+                Paragraph(str(idx), styles["TableCellBold"]),
+                Paragraph(sanitize_text(r), styles["TableCell"]),
+            ])
+        t_recs = Table(rec_rows, colWidths=[30, 510])
+        t_recs.setStyle(
+            TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), COLOR_SECONDARY_NAVY),
+                ("BOX", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+                ("INNERGRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER_LIGHT),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [COLOR_TEXT_LIGHT, COLOR_BG_ZEBRA]),
+                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ])
+        )
+        story.append(t_recs)
+    else:
+        story.append(Paragraph("No immediate containment actions required. Maintain standard continuous monitoring.", styles["Body"]))
+
+    doc.build(story, canvasmaker=NumberedCanvas)
+    return buf.getvalue()

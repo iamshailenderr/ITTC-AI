@@ -587,6 +587,37 @@
         </div>
     </div>
 
+        <!-- RUN CORRELATION RESULT MODAL -->
+    <div id="correlationModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-icon">⚡</span>
+                    <h3 id="modalCorrelationTitle">Run Correlation Investigation Result</h3>
+                </div>
+                <button class="modal-close-btn" onclick="closeCorrelationModal()">&times;</button>
+            </div>
+
+            <div class="modal-toolbar" style="flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;">
+                <div id="modalCorrelationMeta" style="font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono);">
+                    <!-- Run ID & Timestamp -->
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button id="btnDownloadCorrelationReport" class="btn btn-sm btn-primary" onclick="downloadCorrelationReport()">
+                        💾 Download Correlation Report
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="closeCorrelationModal()">
+                        Close
+                    </button>
+                </div>
+            </div>
+
+            <div id="modalCorrelationBody" class="modal-body">
+                <!-- Injected dynamically -->
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>

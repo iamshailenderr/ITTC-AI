@@ -5,6 +5,10 @@ Uses sentence-transformers and FAISS for semantic local retrieval.
 
 import json
 import os
+
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+
 import faiss
 from typing import Any
 

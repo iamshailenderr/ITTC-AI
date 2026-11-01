@@ -56,3 +56,7 @@ PROTECTED_USERS: set[str] = {
 
 # Optional API Security Key for endpoints (if None, running in open dev mode)
 API_KEY: str | None = os.getenv("API_KEY", "").strip() or None
+
+# SOC Email Notification via n8n Webhook
+N8N_WEBHOOK_URL: str = os.getenv("N8N_WEBHOOK_URL", "").strip()
+N8N_WEBHOOK_TIMEOUT: float = float(os.getenv("N8N_WEBHOOK_TIMEOUT", "5.0"))

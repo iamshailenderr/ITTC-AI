@@ -247,7 +247,7 @@ function switchTab(tabId) {
 async function triggerCorrelation() {
     const btn = document.getElementById("btnCorrelate");
     btn.disabled = true;
-    btn.innerHTML = `<span class="spinner"></span> Correlating...`;
+    btn.innerHTML = `<span class="spinner"></span> Running Correlation...`;
 
     try {
         const res = await fetch(`${API_BASE}/api/incidents/correlate`, { method: "POST" });
@@ -261,6 +261,9 @@ async function triggerCorrelation() {
         if (allIncidents.length > 0) {
             selectIncident(allIncidents[0].incident_id);
         }
+
+        const runId = res.headers.get("X-Correlation-Run-ID");
+        await openCorrelationResultModal(runId);
     } catch (err) {
         alert("Correlation error: " + err.message);
     } finally {
@@ -2206,4 +2209,326 @@ async function downloadCurrentSocPDF() {
             btn.innerHTML = originalText;
         }
     }
-}
+}
+
+
+// ==========================================================================
+// 14. RUN CORRELATION RESULT MODAL & INVESTIGATION REPORT
+// ==========================================================================
+
+let currentCorrelationRunId = null;
+let currentCorrelationResult = null;
+
+async function openCorrelationResultModal(runId) {
+    const modal = document.getElementById("correlationModal");
+    if (!modal) return;
+    modal.style.display = "flex";
+
+    const body = document.getElementById("modalCorrelationBody");
+    const meta = document.getElementById("modalCorrelationMeta");
+    if (meta) meta.innerHTML = "Initializing correlation report...";
+    body.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px; gap: 16px;">
+            <span class="spinner" style="width: 32px; height: 32px;"></span>
+            <p style="font-size: 14px; color: var(--text-secondary); margin: 0;">
+                Analyzing alerts, extracting IOCs, enriching threat intelligence, and retrieving RAG findings...
+            </p>
+        </div>
+    `;
+
+    try {
+        const fetchUrl = runId ? `${API_BASE}/api/correlation/${encodeURIComponent(runId)}` : `${API_BASE}/api/correlation/latest`;
+        const res = await fetch(fetchUrl);
+        if (!res.ok) throw new Error("Could not retrieve correlation run findings");
+        const data = await res.json();
+        currentCorrelationRunId = data.correlation_run_id;
+        currentCorrelationResult = data;
+        renderCorrelationResultModal(data);
+    } catch (err) {
+        body.innerHTML = `
+            <div class="empty-state" style="padding: 32px;">
+                <p style="color: var(--accent-critical); font-weight: 600;">Failed to load correlation findings: ${escapeHtml(err.message)}</p>
+            </div>
+        `;
+    }
+}
+
+function closeCorrelationModal() {
+    const modal = document.getElementById("correlationModal");
+    if (modal) modal.style.display = "none";
+}
+
+function renderCorrelationResultModal(data) {
+    const meta = document.getElementById("modalCorrelationMeta");
+    const body = document.getElementById("modalCorrelationBody");
+    if (!body) return;
+
+    const isNoRel = data.status === "no_relation";
+    const tsFormatted = new Date(data.timestamp).toLocaleString();
+
+    if (meta) {
+        meta.innerHTML = `Run ID: <strong style="color: var(--text-primary);">${escapeHtml(data.correlation_run_id)}</strong> &bull; Analyzed: ${escapeHtml(tsFormatted)}`;
+    }
+
+    const sev = String(data.severity || "MEDIUM").toUpperCase();
+    const risk = data.risk ?? 50;
+
+    let statusPill = isNoRel
+        ? `<span class="badge badge-low" style="font-size: 12px; padding: 4px 10px; font-weight: 700;">INDEPENDENT EVENTS (NO RELATION)</span>`
+        : `<span class="badge badge-critical" style="font-size: 12px; padding: 4px 10px; font-weight: 700;">CORRELATED THREATS IDENTIFIED</span>`;
+
+    let bannerBox = isNoRel
+        ? `
+        <div style="background: rgba(59, 130, 246, 0.08); border-left: 4px solid var(--accent-blue); padding: 14px 18px; border-radius: 6px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <strong style="color: var(--accent-blue); font-size: 14px;">No Related Alerts Found</strong>
+                ${statusPill}
+            </div>
+            <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">${escapeHtml(data.message)}</p>
+            <p style="margin: 8px 0 0 0; font-size: 12px; color: var(--text-muted); line-height: 1.4;">${escapeHtml(data.correlation_reasoning)}</p>
+        </div>`
+        : `
+        <div style="background: rgba(239, 68, 68, 0.08); border-left: 4px solid var(--accent-critical); padding: 14px 18px; border-radius: 6px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <strong style="color: var(--accent-critical); font-size: 14px;">Coordinated Threat Incidents Correlated</strong>
+                ${statusPill}
+            </div>
+            <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">${escapeHtml(data.message)}</p>
+            <p style="margin: 8px 0 0 0; font-size: 12px; color: var(--text-muted); line-height: 1.4;">${escapeHtml(data.correlation_reasoning)}</p>
+        </div>`;
+
+    // Metrics Grid
+    const metricsHtml = `
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
+            <div style="background: var(--bg-surface-elevated); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Alerts Analyzed</div>
+                <div style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-top: 4px;">${data.alerts_analyzed}</div>
+            </div>
+            <div style="background: var(--bg-surface-elevated); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Correlated Groups</div>
+                <div style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-top: 4px;">${data.related_groups ? data.related_groups.length : 0}</div>
+            </div>
+            <div style="background: var(--bg-surface-elevated); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Extracted IOCs</div>
+                <div style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-top: 4px;">${data.iocs ? data.iocs.length : 0}</div>
+            </div>
+            <div style="background: var(--bg-surface-elevated); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Correlated Risk</div>
+                <div style="font-size: 20px; font-weight: 700; color: ${risk >= 70 ? 'var(--accent-critical)' : (risk >= 40 ? 'var(--accent-medium)' : 'var(--accent-low)')}; margin-top: 4px;">
+                    ${risk}/100 <span style="font-size: 12px; font-weight: 600;">(${sev})</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Section 1: Related Alert Groups
+    let groupsHtml = "";
+    if (data.related_groups && data.related_groups.length > 0) {
+        groupsHtml = data.related_groups.map(grp => {
+            const grpSev = String(grp.lead_severity || "medium").toLowerCase();
+            const alertCards = (grp.alert_details || []).map(a => `
+                <div style="background: var(--bg-surface); padding: 8px 12px; border-radius: var(--radius-sm); border-left: 3px solid ${grpSev === 'critical' ? 'var(--accent-critical)' : 'var(--accent-medium)'}; margin-top: 6px; font-size: 12px;">
+                    <div style="display: flex; justify-content: space-between; color: var(--text-muted); font-family: var(--font-mono); font-size: 11px;">
+                        <span>${escapeHtml(a.alert_id)} &bull; ${escapeHtml(a.source.toUpperCase())}</span>
+                        <span>${escapeHtml(a.host)}</span>
+                    </div>
+                    <div style="margin-top: 3px; color: var(--text-secondary);">${escapeHtml(a.event)}</div>
+                </div>
+            `).join("");
+
+            return `
+                <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px; margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 14px; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">${escapeHtml(grp.group_id)}</span>
+                        <div style="display: flex; gap: 6px;">
+                            <span class="badge ${getStatusBadgeClass(grp.lead_severity)}">${escapeHtml(String(grp.lead_severity).toUpperCase())}</span>
+                            <span class="badge badge-low">Risk: ${grp.lead_risk_score}/100</span>
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+                        <strong>Relationships:</strong> ${escapeHtml((grp.relationship_types || []).join(", ") || "Temporal Context")} &bull;
+                        <strong>Hosts:</strong> ${escapeHtml((grp.hosts || []).join(", ") || "N/A")}
+                    </div>
+                    <div style="font-size: 13px; color: var(--text-secondary); background: var(--bg-surface); padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 8px;">
+                        ${escapeHtml(grp.reasoning)}
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Correlated Alerts (${(grp.alert_ids || []).length})</div>
+                        ${alertCards}
+                    </div>
+                </div>
+            `;
+        }).join("");
+    } else {
+        groupsHtml = `
+            <div style="background: var(--bg-surface-elevated); border: 1px dashed var(--border-subtle); border-radius: var(--radius-md); padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                No alert clusters formed. All events analyzed appear independent.
+            </div>
+        `;
+    }
+
+    // Section 2: Threat Intelligence & Extracted IOCs
+    let tiHtml = "";
+    if (data.threat_intelligence && data.threat_intelligence.length > 0) {
+        const rows = data.threat_intelligence.map(ti => {
+            const rep = String(ti.reputation || "unknown").toLowerCase();
+            const repBadge = rep === "malicious"
+                ? `<span class="badge badge-critical">MALICIOUS</span>`
+                : (rep === "suspicious"
+                    ? `<span class="badge badge-medium">SUSPICIOUS</span>`
+                    : `<span class="badge badge-low">${escapeHtml(rep.toUpperCase())}</span>`);
+
+            const detText = (ti.malicious_count !== null && ti.total_engines !== null)
+                ? `${ti.malicious_count} / ${ti.total_engines}`
+                : "N/A";
+
+            return `
+                <tr>
+                    <td style="font-family: var(--font-mono); font-size: 12px;">${escapeHtml(ti.ioc)}</td>
+                    <td><span class="badge badge-low">${escapeHtml(String(ti.ioc_type).toUpperCase())}</span></td>
+                    <td>${repBadge}</td>
+                    <td style="font-size: 12px; color: var(--text-secondary);">${escapeHtml(detText)}</td>
+                    <td style="font-size: 12px; color: var(--text-muted);">${escapeHtml(ti.provider_status || "available")}</td>
+                    <td style="font-size: 12px; color: var(--text-secondary);">${escapeHtml(ti.source || "VirusTotal")}</td>
+                </tr>
+            `;
+        }).join("");
+
+        tiHtml = `
+            <table class="data-table" style="width: 100%; margin-top: 8px;">
+                <thead>
+                    <tr>
+                        <th>Indicator (IOC)</th>
+                        <th>Type</th>
+                        <th>Reputation</th>
+                        <th>Detections</th>
+                        <th>Status</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
+    } else if (data.iocs && data.iocs.length > 0) {
+        tiHtml = `
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+                ${data.iocs.map(ioc => `<span class="badge badge-low" style="font-family: var(--font-mono);">${escapeHtml(ioc.type.toUpperCase())}: ${escapeHtml(ioc.value)}</span>`).join("")}
+            </div>
+        `;
+    } else {
+        tiHtml = `<p style="font-size: 13px; color: var(--text-muted); margin: 6px 0;">No external indicators of compromise extracted from analyzed alerts.</p>`;
+    }
+
+    // Section 3: RAG Findings
+    let ragHtml = "";
+    if (data.rag_findings && data.rag_findings.length > 0) {
+        ragHtml = data.rag_findings.map(rf => `
+            <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <strong style="font-size: 13px; color: var(--text-primary);">${escapeHtml(rf.title || rf.topic || "MITRE Playbook")}</strong>
+                    <span style="font-size: 11px; color: var(--accent-cyan); font-family: var(--font-mono);">Sim: ${(rf.similarity_score || 0).toFixed(2)}</span>
+                </div>
+                <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">${escapeHtml(rf.text)}</div>
+            </div>
+        `).join("");
+    } else {
+        ragHtml = `<p style="font-size: 13px; color: var(--text-muted); margin: 6px 0;">Standard baseline RAG guidance applied.</p>`;
+    }
+
+    // Section 4: Qwen3 Correlated Security Assessment
+    const qwen = data.qwen_analysis || {};
+    const qwenSummary = qwen.summary || data.message || "Correlation analysis completed.";
+    const qwenRecs = (qwen.recommendations || []).map(r => `<li>${escapeHtml(r)}</li>`).join("");
+    const qwenEvidence = (qwen.evidence || data.evidence || []).map(e => `<li>${escapeHtml(e)}</li>`).join("");
+    const qwenMitre = (qwen.mitre_techniques || []).map(m => `<span class="badge badge-low" style="font-family: var(--font-mono);">${escapeHtml(m)}</span>`).join(" ");
+
+    body.innerHTML = `
+        <div style="padding: 4px;">
+            ${bannerBox}
+            ${metricsHtml}
+
+            <!-- CORRELATED INCIDENT GROUPS -->
+            <div style="margin-bottom: 24px;">
+                <h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                    <span>📂</span> Correlated Incident Clusters
+                </h4>
+                ${groupsHtml}
+            </div>
+
+            <!-- THREAT INTELLIGENCE -->
+            <div style="margin-bottom: 24px;">
+                <h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                    <span>🌐</span> VirusTotal & Threat Intelligence Enrichment
+                </h4>
+                ${tiHtml}
+            </div>
+
+            <!-- RAG INVESTIGATION FINDINGS -->
+            <div style="margin-bottom: 24px;">
+                <h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                    <span>📚</span> RAG Playbook & MITRE Context
+                </h4>
+                ${ragHtml}
+            </div>
+
+            <!-- QWEN3 AI SECURITY ASSESSMENT -->
+            <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px; margin-bottom: 12px;">
+                <h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+                    <span>⚡</span> Qwen3 Correlated Security Assessment
+                </h4>
+                <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+                    ${escapeHtml(qwenSummary)}
+                </p>
+
+                ${qwenMitre ? `<div style="margin-bottom: 12px;"><strong>MITRE ATT&CK:</strong> ${qwenMitre}</div>` : ""}
+
+                ${qwenEvidence ? `
+                    <div style="margin-bottom: 12px;">
+                        <strong style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Observed Correlated Evidence:</strong>
+                        <ul style="margin: 6px 0 0 18px; padding: 0; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">${qwenEvidence}</ul>
+                    </div>` : ""}
+
+                ${qwenRecs ? `
+                    <div>
+                        <strong style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Recommended Containment Actions:</strong>
+                        <ul style="margin: 6px 0 0 18px; padding: 0; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">${qwenRecs}</ul>
+                    </div>` : ""}
+            </div>
+        </div>
+    `;
+}
+
+async function downloadCorrelationReport() {
+    const btn = document.getElementById("btnDownloadCorrelationReport");
+    const originalText = btn ? btn.innerHTML : "";
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner"></span> Generating PDF...`;
+    }
+
+    try {
+        const runId = currentCorrelationRunId || "latest";
+        const res = await fetch(`${API_BASE}/api/correlation/${encodeURIComponent(runId)}/report`);
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || `HTTP ${res.status}`);
+        }
+
+        const blob = await res.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        a.download = `ITTC_Correlation_Report_${runId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+        alert("Failed to download correlation report PDF: " + err.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+}

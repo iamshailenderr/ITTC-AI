@@ -890,3 +890,152 @@ def generate_incident_report(incident_id: str) -> Optional[Dict[str, Any]]:
             for note in incident.analyst_notes
         ],
     }
+
+
+# ==============================================================================
+# 5. FEATURE THREE: AGGREGATED DAILY SOC SUMMARY DATA & PDF GENERATOR
+# ==============================================================================
+
+def generate_daily_summary_report_data(
+    incidents: Optional[List[Incident]] = None,
+    period_hours: int = 24,
+) -> Dict[str, Any]:
+    """
+    Generate structured report data for the Daily SOC Summary Report.
+    Summarizes all correlated incidents in the 24-hour cycle.
+    """
+    now = datetime.now(timezone.utc)
+    start_utc = now - timedelta(hours=period_hours)
+    end_utc = now
+    date_str = now.strftime("%Y-%m-%d")
+    period_display = f"{start_utc.strftime('%Y-%m-%d %H:%M')} to {end_utc.strftime('%Y-%m-%d %H:%M')} UTC (Last {period_hours}h)"
+
+    if incidents is None:
+        all_incidents = list_incidents()
+        incidents = [
+            inc for inc in all_incidents
+            if to_utc(getattr(inc, "updated_at", None) or getattr(inc, "created_at", None)) >= start_utc
+        ]
+        if not incidents and all_incidents:
+            incidents = all_incidents
+
+    # 1. Total alerts count
+    alert_ids_set = set()
+    for inc in (incidents or []):
+        for aid in (getattr(inc, "related_alert_ids", None) or []):
+            alert_ids_set.add(aid)
+    total_alerts = len(alert_ids_set)
+    total_incidents = len(incidents) if incidents else 0
+
+    # 2. Severity counts
+    sev_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+    peak_risk = 0
+    hosts_set = set()
+    for inc in (incidents or []):
+        s = (getattr(inc, "severity", "") or "low").strip().lower()
+        sev_counts[s] = sev_counts.get(s, 0) + 1
+        r_score = int(getattr(inc, "risk_score", 0) or 0)
+        if r_score > peak_risk:
+            peak_risk = r_score
+        for h in getattr(inc, "affected_hosts", []) or []:
+            if h and h != "N/A":
+                hosts_set.add(h)
+
+    # 3. Overall risk summary
+    if incidents:
+        avg_risk = sum(getattr(inc, "risk_score", 0) for inc in incidents) / max(total_incidents, 1)
+        crit_count = sev_counts.get("critical", 0)
+        high_count = sev_counts.get("high", 0)
+        risk_summary = (
+            f"During the 24-hour monitoring interval, ITTC-AI correlated telemetry into {total_incidents} "
+            f"security incident(s) involving {total_alerts} alert(s) across {len(hosts_set)} host(s). "
+            f"Mean risk score is {avg_risk:.1f}/100 with peak risk of {peak_risk}/100. "
+            f"Identified {crit_count} Critical and {high_count} High priority incident(s) requiring analyst review and containment."
+        )
+    else:
+        risk_summary = (
+            "No security incidents were recorded during the 24-hour monitoring interval. "
+            "Continuous anomaly detection and sensor log ingestion active."
+        )
+
+    # 4. Detailed Incident Items
+    incident_items = []
+    from backend.services.notifications import (
+        extract_affected_hosts,
+        extract_iocs_list,
+        extract_recommended_action,
+    )
+    for inc in (incidents or []):
+        rec_act = extract_recommended_action(inc)
+        rec = getattr(inc, "response_recommendation", None) or {}
+        req_approval = rec.get("requires_approval", True) if isinstance(rec, dict) else True
+        incident_items.append({
+            "incident_id": getattr(inc, "incident_id", ""),
+            "severity": (getattr(inc, "severity", "") or "low").upper(),
+            "risk_score": int(getattr(inc, "risk_score", 0) or 0),
+            "confidence": float(round(getattr(inc, "confidence", 0.0) or 0.0, 2)),
+            "affected_hosts": extract_affected_hosts(inc),
+            "iocs": extract_iocs_list(inc),
+            "mitre_techniques": list(getattr(inc, "mitre_techniques", None) or []),
+            "summary": str(getattr(inc, "summary", "") or ""),
+            "evidence": list(getattr(inc, "evidence", None) or []),
+            "recommended_action": rec_act,
+            "requires_approval": req_approval,
+            "status": str(getattr(inc, "status", "OPEN")),
+            "created_at": inc.created_at.isoformat() if hasattr(inc, "created_at") and hasattr(inc.created_at, "isoformat") else str(getattr(inc, "created_at", "")),
+            "updated_at": inc.updated_at.isoformat() if hasattr(inc, "updated_at") and hasattr(inc.updated_at, "isoformat") else str(getattr(inc, "updated_at", "")),
+        })
+
+    # 5. Strategic Recommendations
+    overall_recommendations = []
+    if sev_counts.get("critical", 0) > 0 or sev_counts.get("high", 0) > 0:
+        overall_recommendations.append(
+            "Priority Containment: Review and authorize pending response recommendations for Critical and High incidents."
+        )
+    if hosts_set:
+        overall_recommendations.append(
+            f"Host Isolation & Forensics: Verify endpoint isolation and collect volatile triage telemetry on affected hosts ({', '.join(sorted(list(hosts_set))[:4])})."
+        )
+    overall_recommendations.append(
+        "Firewall & Perimeter Hardening: Ingest observed external IOCs into perimeter egress filtering blocklists."
+    )
+    overall_recommendations.append(
+        "Telemetry Verification: Confirm log forwarder health across Wazuh Manager and Suricata EVE event streams."
+    )
+
+    report_id = f"RPT-DAILY-{now.strftime('%Y%m%d-%H%M%S')}"
+
+    return {
+        "report_id": report_id,
+        "report_date": date_str,
+        "generated_at": now.isoformat(),
+        "title": "ITTC-AI Daily SOC Summary Report",
+        "reporting_period": {
+            "start_time": start_utc.isoformat(),
+            "end_time": end_utc.isoformat(),
+            "display": period_display,
+        },
+        "total_alerts": total_alerts,
+        "total_incidents": total_incidents,
+        "severity_counts": sev_counts,
+        "overall_risk_summary": risk_summary,
+        "statistics": {
+            "total_alerts": total_alerts,
+            "total_incidents": total_incidents,
+            "severity_counts": sev_counts,
+            "peak_risk": peak_risk,
+            "distinct_hosts_count": len(hosts_set),
+        },
+        "incidents": incident_items,
+        "overall_recommendations": overall_recommendations,
+    }
+
+
+def generate_daily_summary_pdf(
+    incidents: Optional[List[Incident]] = None,
+    period_hours: int = 24,
+) -> bytes:
+    """Generate aggregated Daily SOC Summary PDF bytes."""
+    from backend.services.pdf_generator import build_daily_summary_pdf
+    report_data = generate_daily_summary_report_data(incidents=incidents, period_hours=period_hours)
+    return build_daily_summary_pdf(report_data)

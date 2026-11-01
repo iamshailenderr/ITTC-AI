@@ -5,6 +5,7 @@ Extracts Indicators of Compromise from a SecurityAlert without using an LLM.
 
 Supported IOC types:
   - IPv4 addresses          (public only; private RFC-1918 / loopback excluded)
+  - IPv6 addresses          (public only; loopback and unique local excluded)
   - Domains                 (heuristic — excludes known benign tlds, windows paths)
   - URLs                    (http:// and https://)
   - MD5 hashes              (32 hex chars)
@@ -16,7 +17,7 @@ from __future__ import annotations
 
 import re
 import ipaddress
-from typing import List
+from typing import List, Sequence
 
 from backend.models.alert import SecurityAlert
 from backend.threat_intel.models import IOC
@@ -27,6 +28,12 @@ from backend.threat_intel.models import IOC
 
 _RE_IPV4 = re.compile(
     r"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b"
+)
+
+_RE_IPV6 = re.compile(
+    r"\b(?:[a-fA-F0-9]{1,4}:){2,7}[a-fA-F0-9]{1,4}\b|"
+    r"\b(?:[a-fA-F0-9]{1,4}:){1,7}:[a-fA-F0-9]{1,4}\b|"
+    r"\b[a-fA-F0-9]{1,4}::[a-fA-F0-9]{1,4}\b"
 )
 
 _RE_URL = re.compile(
@@ -50,9 +57,6 @@ _RE_SHA256 = re.compile(r"\b[0-9a-fA-F]{64}\b")
 # Private / reserved ranges — do NOT treat these as external threat IOCs
 # ---------------------------------------------------------------------------
 
-# Explicit RFC-1918 and special-purpose ranges that should never be IOCs.
-# We intentionally DO NOT block RFC-5737 TEST-NET ranges (203.0.113.0/24,
-# 198.51.100.0/24, 192.0.2.0/24) so they can be used in test datasets.
 _PRIVATE_NETS = [
     ipaddress.ip_network("10.0.0.0/8"),        # RFC-1918
     ipaddress.ip_network("172.16.0.0/12"),     # RFC-1918
@@ -61,6 +65,7 @@ _PRIVATE_NETS = [
     ipaddress.ip_network("169.254.0.0/16"),    # link-local
     ipaddress.ip_network("::1/128"),           # IPv6 loopback
     ipaddress.ip_network("fc00::/7"),          # IPv6 unique local
+    ipaddress.ip_network("fe80::/10"),         # IPv6 link-local
     ipaddress.ip_network("0.0.0.0/8"),         # unspecified
     ipaddress.ip_network("224.0.0.0/4"),       # multicast
     ipaddress.ip_network("240.0.0.0/4"),       # reserved (Class E)
@@ -101,7 +106,7 @@ def extract_iocs(alert: SecurityAlert) -> List[IOC]:
 
     Private/reserved IPs are excluded.
     URLs are extracted before domain scanning to avoid double-counting.
-    Hash types are identified by character count (64 → SHA256, 40 → SHA1, 32 → MD5).
+    Hash types are identified by character count (64 -> SHA256, 40 -> SHA1, 32 -> MD5).
     """
     text = _build_text(alert)
     seen: set[tuple[str, str]] = set()
@@ -127,11 +132,9 @@ def extract_iocs(alert: SecurityAlert) -> List[IOC]:
     for m in _RE_MD5.finditer(remaining_for_md5):
         _add("md5", m.group(0).lower())
 
-    # 4. URLs  (extract first so domain regex doesn't double-match)
-    url_spans: list[tuple[int, int]] = []
+    # 4. URLs (extract first so domain regex doesn't double-match)
     for m in _RE_URL.finditer(text):
         _add("url", m.group(0))
-        url_spans.append(m.span())
 
     # 5. IPv4 — skip private/reserved
     for m in _RE_IPV4.finditer(text):
@@ -139,7 +142,17 @@ def extract_iocs(alert: SecurityAlert) -> List[IOC]:
         if not _is_private_or_reserved(ip):
             _add("ip", ip)
 
-    # 6. Domains — strip any already captured in URLs
+    # 6. IPv6 — validate and skip private/reserved
+    for m in _RE_IPV6.finditer(text):
+        candidate = m.group(0)
+        try:
+            addr = ipaddress.ip_address(candidate)
+            if addr.version == 6 and not _is_private_or_reserved(candidate):
+                _add("ipv6", candidate)
+        except ValueError:
+            pass
+
+    # 7. Domains — strip any already captured in URLs
     url_free_text = _RE_URL.sub(" ", text)
     for m in _RE_DOMAIN.finditer(url_free_text):
         domain = m.group(0).rstrip(".").lower()
@@ -148,3 +161,21 @@ def extract_iocs(alert: SecurityAlert) -> List[IOC]:
             _add("domain", domain)
 
     return iocs
+
+
+def extract_all_iocs(alerts: Sequence[SecurityAlert]) -> List[IOC]:
+    """
+    Extract and deduplicate IOCs across an entire sequence of SecurityAlerts.
+    """
+    seen: set[tuple[str, str]] = set()
+    all_iocs: List[IOC] = []
+    for alert in alerts:
+        try:
+            for ioc in extract_iocs(alert):
+                key = (ioc.type, ioc.value.lower())
+                if key not in seen:
+                    seen.add(key)
+                    all_iocs.append(ioc)
+        except Exception:
+            pass
+    return all_iocs
